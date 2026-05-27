@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weekly Test 1 - Plumbing Code</title>
+    <style>
+        :root {
+            --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; --primary: #3498db; --primary-hover: #2980b9;
+            --correct: #2ecc71; --correct-bg: #e8f8f5; --wrong: #e74c3c; --wrong-bg: #fdedec;
+            --info-border: #f39c12; --info-bg: #fef9e7; --secondary: #95a5a6; --secondary-hover: #7f8c8d;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
+        #app { background: var(--card-bg); width: 100%; max-width: 600px; padding: 25px 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); align-self: flex-start; margin-top: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1.1rem; padding-bottom: 15px; border-bottom: 2px solid #eee; margin-bottom: 25px; color: #7f8c8d; }
+        .score { color: var(--primary); }
+        .question { font-size: 1.25rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .btn { width: 100%; text-align: left; background: #f8f9fa; border: 2px solid #e9ecef; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 500; color: var(--text); cursor: pointer; transition: all 0.2s ease; outline: none; }
+        .btn:hover:not(:disabled) { background: #e2e6ea; border-color: #dae0e5; transform: translateY(-1px); }
+        .btn:disabled { cursor: default; opacity: 0.9; }
+        .btn.correct { background: var(--correct-bg); border-color: var(--correct); color: #1e8449; font-weight: 700; }
+        .btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: #922b21; text-decoration: line-through; opacity: 0.7; }
+        .info-box { margin-top: 25px; padding: 15px; background: var(--info-bg); border-left: 5px solid var(--info-border); border-radius: 6px; font-size: 0.95rem; line-height: 1.5; display: none; animation: fadeIn 0.4s ease; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 25px; }
+        .nav-btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.2s; display: none; }
+        .nav-btn.prev { background: var(--secondary); color: white; }
+        .nav-btn.next { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3); }
+        .home-btn { background: var(--secondary); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .result-screen { text-align: center; padding: 20px 0; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="quiz-container">
+        <div class="header">
+            <button class="home-btn" onclick="location.reload()">&#127968; Home</button>
+            <span id="q-counter">Q: 1/50</span>
+            <span class="score">Score: <span id="score-val">0</span></span>
+        </div>
+        <div id="question-text" class="question"></div>
+        <div id="options-container" class="options"></div>
+        <div id="info-box" class="info-box"></div>
+        <div class="nav-buttons">
+            <button id="prev-btn" class="nav-btn prev" onclick="prevQuestion()">&#8678; Prev</button>
+            <button id="next-btn" class="nav-btn next" onclick="nextQuestion()">Next &#10145;</button>
+        </div>
+    </div>
+</div>
+<script>
+    const allQuestions = [{"q": "1. 1 fixture unit is equal to?", "opts": ["A. 1 cu.m per minute", "B. 7.48 liters per minute", "C. 28.3 gallons per minute", "D. 7.48 gallons per minute"], "ans": 3, "info": "Correct Answer: D. 7.48 gallons per minute", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>1 cu.m per minute:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>7.48 liters per minute:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>28.3 gallons per minute:</strong> 1 cu. ft. per minute is equal to 28.3 liters/min.</li></ul>"}, {"q": "2. Code on Sanitation of the Philippines", "opts": ["A. RA 9514", "B. RA 8495", "C. RA 8749", "D. PD 856"], "ans": 3, "info": "Correct Answer: D. PD 856", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 9514:</strong> Fire Code of the Philippines of 2008.</li><li><strong>RA 8495:</strong> Philippine Mechanical Engineering Act of 1998.</li><li><strong>RA 8749:</strong> Philippine Clean Air Act of 1999.</li></ul>"}, {"q": "3. Some components of the plumbing system have been concealed prior to inspection. What can possibly happen?", "opts": ["A. the inspector will charge a fine for violating the standard process", "B. the inspector will just focus on the readily accessible equipment", "C. the inspector will require removal for proper inspection", "D. the inspector may approve the design with conditions"], "ans": 2, "info": "Correct Answer: C. the inspector will require removal for proper inspection", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>the inspector will charge a fine for violating the standard process:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>the inspector will just focus on the readily accessible equipment:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>the inspector may approve the design with conditions:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "4. Each member of the board, shall at the time of his appointment be at least _____ of age.", "opts": ["A. 30", "B. 35", "C. 40", "D. 21"], "ans": 0, "info": "Correct Answer: A. 30", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>35:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>40:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>21:</strong> Minimum age for a Registered Master Plumber applicant.</li></ul>"}, {"q": "5. Roughing-in of cold and hot water supply line are ideally distanced at least _____ apart.", "opts": ["A. 4\"", "B. 8\"", "C. 10\"", "D. 2\""], "ans": 1, "info": "Correct Answer: B. 8\"", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>4\":</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>10\":</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>2\":</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "6. Color for Type M copper pipe", "opts": ["A. Red", "B. Green", "C. Yellow", "D. Blue"], "ans": 0, "info": "Correct Answer: A. Red", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Green:</strong> Color coding for Type K copper pipe.</li><li><strong>Yellow:</strong> Color coding for Type DWV copper pipe.</li><li><strong>Blue:</strong> Color coding for Type L copper pipe.</li></ul>"}, {"q": "7. A hose connection with two-gated outlets permitting two connections of the same or smaller coupling diameter to be taken from a single supply line.", "opts": ["A. Tapped Tee", "B. Return Bend", "C. Wye", "D. Siamese"], "ans": 2, "info": "Correct Answer: C. Wye", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Tapped Tee:</strong> A tee with the branch tapped to receive a threaded pipe or fittings.</li><li><strong>Return Bend:</strong> An open return bend usually made up two 90 degrees bends.</li><li><strong>Siamese:</strong> A hose fitting with clapper valves for combining the flow from two or more lines of hose.</li></ul>"}, {"q": "8. The top edge of a receptacle from where water overflows.", "opts": ["A. Rim", "B. Effective Opening", "C. Flood Level Rim", "D. Flood Level"], "ans": 2, "info": "Correct Answer: C. Flood Level Rim", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Rim:</strong> An unobstructed top open edge of a fixture.</li><li><strong>Effective Opening:</strong> The minimum cross-sectional area at the point of water supply discharge.</li><li><strong>Flood Level:</strong> The level in a receptacle over which water would overflow.</li></ul>"}, {"q": "9. All plumbing plans, drawings, diagrams, etc. shall be submitted in ___ sets for permit application.", "opts": ["A. 6", "B. 2", "C. 4", "D. 3"], "ans": 0, "info": "Correct Answer: A. 6", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>2:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>4:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>3:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "10. The following are grounds for non-issuance of the  certificate of registration by the Board of Master Plumbers except for _____.", "opts": ["A. convicted by court for any criminal offense", "B. having an unsound mind", "C. failure to pay the required fees", "D. guilty of immoral or dishonorable conduct"], "ans": 2, "info": "Correct Answer: C. failure to pay the required fees", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>convicted by court for any criminal offense:</strong> A valid ground for non-issuance of certificate.</li><li><strong>having an unsound mind:</strong> A valid ground for non-issuance of certificate.</li><li><strong>guilty of immoral or dishonorable conduct:</strong> A valid ground for non-issuance of certificate.</li></ul>"}, {"q": "11. Depth of the molten pig lead in a caulked joint", "opts": ["A. 19 mm", "B. 3.2 mm", "C. 25.4 mm", "D. 51 mm"], "ans": 2, "info": "Correct Answer: C. 25.4 mm", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>19 mm:</strong> Required exposed surface on each side of a wiped lead joint.</li><li><strong>3.2 mm:</strong> Minimum wall thickness of lead bends and traps.</li><li><strong>51 mm:</strong> Trap arm size for floor drains, shower gang, etc.</li></ul>"}, {"q": "12. A plumbing permit shall become null and void if the plumbing work has been suspended or abandoned for a period or _____.", "opts": ["A. 90 days", "B. 360 days", "C. 120 days", "D. 365 days"], "ans": 2, "info": "Correct Answer: C. 120 days", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>90 days:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>360 days:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>365 days:</strong> Equivalent to 1 year; permit validity if work is not suspended.</li></ul>"}, {"q": "13. Vertical support of _____ is placed not less than every other storey height.", "opts": ["A. Plastic pipe", "B. Screwed Pipe", "C. Cast Iron Soil Pipe", "D. Copper Tubing"], "ans": 1, "info": "Correct Answer: B. Screwed Pipe", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Plastic pipe:</strong> Supported at intervals not exceeding 1.2m.</li><li><strong>Cast Iron Soil Pipe:</strong> Supported at every storey or closer.</li><li><strong>Copper Tubing:</strong> Supported at various intervals depending on size (e.g. 1.2m for 38mm or smaller).</li></ul>"}, {"q": "14. (ANSI) Pipe Color code for Fire Quenching", "opts": ["A. Red with White Lettering", "B. White with Red Lettering", "C. Red with Black Lettering", "D. Orange with Black Lettering"], "ans": 0, "info": "Correct Answer: A. Red with White Lettering", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>White with Red Lettering:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Red with Black Lettering:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Orange with Black Lettering:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "15. Tube made of plastic material and colored black. The cross-sectional shape is normally oval and is denoted by its outside diameter or 0.D.", "opts": ["A. Polyvinyl Chloride", "B. Polyethylene", "C. Polybutylene", "D. Acrylonitrile-Butadiene-Styrene"], "ans": 2, "info": "Correct Answer: C. Polybutylene", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Polyvinyl Chloride:</strong> Rigid plastic pipe used for cold water and drainage.</li><li><strong>Polyethylene:</strong> Flexible plastic pipe, often black, used for water service.</li><li><strong>Acrylonitrile-Butadiene-Styrene:</strong> ABS, plastic pipe used for drainage.</li></ul>"}, {"q": "16. An adjustable tubing connection, consisting of a compression nut, a friction ring, and a compression washer, designed to fit a threaded adapter fitting or a standard taper pipe thread.", "opts": ["A. Welded Joint or Seam", "B. Slip Joint", "C. Shielded Coupling", "D. Pressure-Lock Type Fitting"], "ans": 1, "info": "Correct Answer: B. Slip Joint", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Welded Joint or Seam:</strong> Joined by melting the metal or plastic parts.</li><li><strong>Shielded Coupling:</strong> An elastomeric sealing gasket with an outer shield.</li><li><strong>Pressure-Lock Type Fitting:</strong> A type of connection that relies on pressure and friction.</li></ul>"}, {"q": "17. Plumbing fixtures shall be made of smooth non-absorbent material, free from concealed fouling surfaces and shall be located in ventilated enclosures", "opts": ["A. Principle No. 13", "B. Principle No. 5", "C. Principle No. 15", "D. Principle No. 7"], "ans": 3, "info": "Correct Answer: D. Principle No. 7", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Principle No. 13:</strong> Piping shall be installed to prevent damage from settlement, vibration, expansion.</li><li><strong>Principle No. 5:</strong> Plumbing fixtures shall be provided with adequate volume and pressure of water.</li><li><strong>Principle No. 15:</strong> Every fixture directly connected to the drainage system shall be equipped with a liquid-seal trap.</li></ul>"}, {"q": "18. For the upper floors of a residential building, a journeyman installs a 19 mm pipe for the riser, instead of the required 25 mm pipe as designed.<br><br>What will be the effect of this installation?", "opts": ["A. Lesser pipe supports will be required.", "B. Water's velocity will be reduced.", "C. Water's pressure will be reduced.", "D. Effect is undetermined, as it will depend on the pipe length."], "ans": 2, "info": "Correct Answer: C. Water's pressure will be reduced.", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Lesser pipe supports will be required.:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Water's velocity will be reduced.:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Effect is undetermined, as it will depend on the pipe length.:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "19. Which authority is responsible for the administration and enforcement of the National Plumbing Code?", "opts": ["A. Professional Regulation Commission", "B. Department of Public Works and Highways", "C. Plumbing Official", "D. Professional Regulatory Board for Master Plumbers"], "ans": 2, "info": "Correct Answer: C. Plumbing Official", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Professional Regulation Commission:</strong> The government agency regulating professionals in the Philippines.</li><li><strong>Department of Public Works and Highways:</strong> DPWH, responsible for public works.</li><li><strong>Professional Regulatory Board for Master Plumbers:</strong> The board under PRC specifically for plumbers.</li></ul>"}, {"q": "20. The year when NAMPAP was organized and registered with the Securities and Exchange Commission", "opts": ["A. 1965", "B. 1956", "C. 1935", "D. 1940"], "ans": 2, "info": "Correct Answer: C. 1935", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>1965:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>1956:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>1940:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "21. A pipe flange that is not drilled for bolt holes.", "opts": ["A. flat-face flange", "B. blind flange", "C. raised-face flange", "D. blank flange"], "ans": 3, "info": "Correct Answer: D. blank flange", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>flat-face flange:</strong> A flange with a flat mating surface.</li><li><strong>blind flange:</strong> A flange that closes the end of a pipe.</li><li><strong>raised-face flange:</strong> A flange with a raised mating surface.</li></ul>"}, {"q": "22. IPS shall be supported at ___ intervals for piping 19 mm diameter and smaller.", "opts": ["A. 1.2 m", "B. 1.8 m", "C. 3.6 m", "D. 3 m"], "ans": 3, "info": "Correct Answer: D. 3 m", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>1.2 m:</strong> Support interval for horizontal plastic pipe or small copper tubing.</li><li><strong>1.8 m:</strong> Support interval for horizontal copper tubing larger than 38mm.</li><li><strong>3.6 m:</strong> Support interval for vertical copper tubing.</li></ul>"}, {"q": "23. Any pipe or fitting installed at an angle of more than 45 degrees with the vertical line.", "opts": ["A. horizontal pipe", "B. vertical pipe", "C. diagonal pipe", "D. parallel pipe"], "ans": 0, "info": "Correct Answer: A. horizontal pipe", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>vertical pipe:</strong> Installed in a vertical position or an angle not more than 45 degrees with the vertical.</li><li><strong>diagonal pipe:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>parallel pipe:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "24. This examination subject in Master Plumbing was originally split into two.", "opts": ["A. Plumbing Arithmetic", "B. Practical Problems", "C. Plumbing Code", "D. Sanitation, Plumbing Design, and Installation"], "ans": 1, "info": "Correct Answer: B. Practical Problems", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Plumbing Arithmetic:</strong> One of the examination subjects for Master Plumber.</li><li><strong>Plumbing Code:</strong> One of the examination subjects for Master Plumber.</li><li><strong>Sanitation, Plumbing Design, and Installation:</strong> One of the examination subjects for Master Plumber.</li></ul>"}, {"q": "25. Wiped lead joints shall have an exposed surface on each side of a joint not less than _____.", "opts": ["A. 51 mm", "B. 19 mm", "C. 3.2 mm", "D. 25.4 mm"], "ans": 1, "info": "Correct Answer: B. 19 mm", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>51 mm:</strong> Trap arm size for floor drains, shower gang, etc.</li><li><strong>3.2 mm:</strong> Minimum wall thickness of lead bends and traps.</li><li><strong>25.4 mm:</strong> Minimum depth of molten pig lead in a caulked joint.</li></ul>"}, {"q": "26. Every building where _____ shall have a sewer service connection to a public or private sewer systems.", "opts": ["A. there is more than 1 occupant", "B. at least 1 toilet room is present", "C. solid wastes are discharged", "D. plumbing fixtures are installed"], "ans": 3, "info": "Correct Answer: D. plumbing fixtures are installed", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>there is more than 1 occupant:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>at least 1 toilet room is present:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>solid wastes are discharged:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "27. What is the standard length of Galvanized Iron Pipe?", "opts": ["A. 3 m", "B. 6 m", "C. 4 m", "D. 1.5 m"], "ans": 1, "info": "Correct Answer: B. 6 m", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>3 m:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>4 m:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>1.5 m:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "28. The Administrative Authority must be notified at least ___ working days before such inspection is intended.", "opts": ["A. 8", "B. 7", "C. 2", "D. 3"], "ans": 3, "info": "Correct Answer: D. 3", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>8:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>7:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>2:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "29. What will happen if a drainage piping is placed at slope of 10mm/m due to structural conditions?", "opts": ["A. Increase in DFU loading", "B. Decrease in drainage piping length", "C. Decrease in DFU loading", "D. Increase in drainage piping length"], "ans": 2, "info": "Correct Answer: C. Decrease in DFU loading", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Increase in DFU loading:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Decrease in drainage piping length:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Increase in drainage piping length:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "30. For caulked-on closet ring, the minimum overall depth shall be:", "opts": ["A. 2\"", "B. 1-1/2\"", "C. 1-1/4\"", "D. 3\""], "ans": 0, "info": "Correct Answer: A. 2\"", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>1-1/2\":</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>1-1/4\":</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>3\":</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "31. A pipe or conduit for carrying sewage and wastewater .", "opts": ["A. Drainage System", "B. Main Sewer", "C. Drain", "D. Sewer"], "ans": 3, "info": "Correct Answer: D. Sewer", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Drainage System:</strong> Includes all pipings conveying sewage or other liquid wastes.</li><li><strong>Main Sewer:</strong> A sewer line or system directly controlled by public authority.</li><li><strong>Drain:</strong> Any pipe that carries wastewater or water-borne wastes in a building drainage system.</li></ul>"}, {"q": "32. Any change, addition or modification in construction or occupancy", "opts": ["A. Alteration", "B. Renovation", "C. Improvement", "D. Repair"], "ans": 0, "info": "Correct Answer: A. Alteration", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Renovation:</strong> Restoring to a good state of repair.</li><li><strong>Improvement:</strong> Enhancement of the system.</li><li><strong>Repair:</strong> The reconstruction or renewal of any part of an existing building for its maintenance.</li></ul>"}, {"q": "33. An open return bend usually made up of two 90\u00b0 bends", "opts": ["A. Return bend", "B. Double offset bend", "C. Offset", "D. Double-bend fitting"], "ans": 0, "info": "Correct Answer: A. Return bend", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Double offset bend:</strong> Two offsets in succession or in series.</li><li><strong>Offset:</strong> A combination of elbows or bends bringing a pipe out of line and back parallel.</li><li><strong>Double-bend fitting:</strong> A pipe fitting with adjacent reverse bends (e.g. S Trap).</li></ul>"}, {"q": "34. What is the least method to lay a PB or PE tube on trenches?", "opts": ["A. stretched", "B. straight", "C. on steel sleeves", "D. snake-like"], "ans": 0, "info": "Correct Answer: A. stretched", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>straight:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>on steel sleeves:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>snake-like:</strong> The proper way to lay PE or PB tubing in trenches to allow for expansion.</li></ul>"}, {"q": "35. The birth of the plumbing profession in the Philippines is traced back to the ___ century.", "opts": ["A. 19th", "B. 20th", "C. 18th", "D. 17th"], "ans": 3, "info": "Correct Answer: D. 17th", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>19th:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>20th:</strong> The century when NAMPAP was organized (1935).</li><li><strong>18th:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "36. A set of moral principles or values to govern the conduct of an individual belonging to a group or profession on the basis of honestly, fairness, and justice.", "opts": ["A. Propriety", "B. Ethics", "C. Integrity", "D. Conduct"], "ans": 1, "info": "Correct Answer: B. Ethics", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Propriety:</strong> Conformity to conventionally accepted standards of behavior.</li><li><strong>Integrity:</strong> The quality of being honest and having strong moral principles.</li><li><strong>Conduct:</strong> The manner in which a person behaves.</li></ul>"}, {"q": "37. Trap arm size of Laundry Tub", "opts": ["A. 38 mm", "B. 51 mm", "C. 32 mm", "D. 76 mm"], "ans": 0, "info": "Correct Answer: A. 38 mm", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>51 mm:</strong> Trap arm size for floor drains, shower gang, etc.</li><li><strong>32 mm:</strong> Trap arm size for wash basin (single) and dental lavatory.</li><li><strong>76 mm:</strong> Trap arm size for sand interceptors.</li></ul>"}, {"q": "38. Preferred when a piece of pipe needed is shorter than 150 cm long", "opts": ["A. Single Hub", "B. Standard Pipe", "C. Hubless Pipe", "D. Double Hub"], "ans": 3, "info": "Correct Answer: D. Double Hub", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Single Hub:</strong> A standard pipe with a hub on one end.</li><li><strong>Standard Pipe:</strong> A normal length of pipe.</li><li><strong>Hubless Pipe:</strong> Cast iron soil pipe with plain ends connected by shielded couplings.</li></ul>"}, {"q": "39. A Master Plumber shall live up to the standards of the professional practice of plumbing.", "opts": ["A. Article I, Section 2 of Code of Ethics", "B. Article III, Section 3 of Code of Ethics", "C. Article I, Section 6 of Code of Ethics", "D. Article II, Section 3 of Code of Ethics"], "ans": 1, "info": "Correct Answer: B. Article III, Section 3 of Code of Ethics", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Article I, Section 2 of Code of Ethics:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Article I, Section 6 of Code of Ethics:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Article II, Section 3 of Code of Ethics:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "40. Common maximum service temperature rating of PVC", "opts": ["A. 140 deg. F", "B. 180 deg. F", "C. 160 deg. F", "D. 120 deg. F"], "ans": 0, "info": "Correct Answer: A. 140 deg. F", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>180 deg. F:</strong> Maximum service temperature rating for CPVC.</li><li><strong>160 deg. F:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>120 deg. F:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "41. The wall thickness of pipe is determined by  _____.", "opts": ["A. None of these", "B. Adding the inside diameter from the outside diameter", "C. Subtracting the inside diameter from the outside diameter", "D. Subtracting the inside diameter from the outside diameter and dividing by 2"], "ans": 3, "info": "Correct Answer: D. Subtracting the inside diameter from the outside diameter and dividing by 2", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>None of these:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Adding the inside diameter from the outside diameter:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>Subtracting the inside diameter from the outside diameter:</strong> This yields twice the wall thickness.</li></ul>"}, {"q": "42. Which is not a proper connection for HDPE pipes?", "opts": ["A. flange connection", "B. solvent cement", "C. electrofusion", "D. compression fittings"], "ans": 1, "info": "Correct Answer: B. solvent cement", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>flange connection:</strong> A method to connect HDPE pipes.</li><li><strong>electrofusion:</strong> A method to weld HDPE pipes.</li><li><strong>compression fittings:</strong> A method to mechanically join HDPE pipes.</li></ul>"}, {"q": "43. Each fixture directly connected to the drainage system shall be equipped with a _____.", "opts": ["A. gas-tight p-trap", "B. water-sealed trap", "C. water-tight trap", "D. approved crown trap"], "ans": 1, "info": "Correct Answer: B. water-sealed trap", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>gas-tight p-trap:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>water-tight trap:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>approved crown trap:</strong> Crown-vented traps are prohibited.</li></ul>"}, {"q": "44. A water heater is classified as?", "opts": ["A. Fixture", "B. Plumbing Appliance", "C. Plumbing Appurtenance", "D. Receptor"], "ans": 1, "info": "Correct Answer: B. Plumbing Appliance", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Fixture:</strong> A receptacle attached to a plumbing system in which wastes are collected.</li><li><strong>Plumbing Appurtenance:</strong> A manufactured device to perform a special plumbing function (e.g. valves).</li><li><strong>Receptor:</strong> An approved plumbing fixture to adequately receive discharge from indirect waste pipes.</li></ul>"}, {"q": "45. A gas furnace vent has been installed with many elbows. What will be the effect of this installation?", "opts": ["A. reduced draft efficiency", "B. temperature build-up", "C. stabilized vent structure", "D. increased draft velocity"], "ans": 0, "info": "Correct Answer: A. reduced draft efficiency", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>temperature build-up:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>stabilized vent structure:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>increased draft velocity:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "46. What is not included in a plumbing unit?", "opts": ["A. Kitchen Sink", "B. Urinal", "C. Hose Bibb", "D. Laundry Tray"], "ans": 1, "info": "Correct Answer: B. Urinal", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>Kitchen Sink:</strong> Part of a standard plumbing unit.</li><li><strong>Hose Bibb:</strong> Part of a standard plumbing unit.</li><li><strong>Laundry Tray:</strong> Part of a standard plumbing unit.</li></ul>"}, {"q": "47. Minimum weight of a lead for flashing or vent terminals", "opts": ["A. 14.63 kg per sqm", "B. 6.8 kg", "C. 19.56 kg per sqm", "D. 12.86 kg"], "ans": 0, "info": "Correct Answer: A. 14.63 kg per sqm", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>6.8 kg:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>19.56 kg per sqm:</strong> Minimum weight of a lead for safe pans.</li><li><strong>12.86 kg:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}, {"q": "48. Distance of bottom of all pipe tranches to the footing of any adjacent building or structure parallel to it", "opts": ["A. 600 mm", "B. 45 degrees", "C. 90 degrees", "D. 900 mm"], "ans": 1, "info": "Correct Answer: B. 45 degrees", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>600 mm:</strong> Distance of building drain to outside building wall.</li><li><strong>90 degrees:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>900 mm:</strong> Minimum vent termination height above an openable window.</li></ul>"}, {"q": "49. The Old Fire Code of the Philippines", "opts": ["A. PD 1096", "B. PD 223", "C. PD 1185", "D. RA 9514"], "ans": 2, "info": "Correct Answer: C. PD 1185", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 1096:</strong> National Building Code of the Philippines (Current).</li><li><strong>PD 223:</strong> Creation of the Professional Regulation Commission.</li><li><strong>RA 9514:</strong> Fire Code of the Philippines of 2008.</li></ul>"}, {"q": "50. ASTM means?", "opts": ["A. American Society for Testing and Materials", "B. American Society of Testing and Maintenance", "C. American Standards for Testing and Materials", "D. American Safety Test Manuals"], "ans": 0, "info": "Correct Answer: A. American Society for Testing and Materials", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>American Society of Testing and Maintenance:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>American Standards for Testing and Materials:</strong> <em>This choice has no definition and was added as a distractor.</em></li><li><strong>American Safety Test Manuals:</strong> <em>This choice has no definition and was added as a distractor.</em></li></ul>"}];
+
+    let questionsList = [];
+    let currentQ = 0;
+    let userAnswers = [];
+    let isExamMode = false;
+    let timerInterval = null;
+    let timeLeft = 0;
+
+    const quizContainer = document.getElementById('quiz-container');
+    const appContainer = document.getElementById('app');
+
+    const startMenuHTML = `
+        <div id="start-menu" style="text-align: center; padding: 20px 0;">
+            <h2 style="color: var(--primary); margin-bottom: 30px;">Weekly Test 1 - Plumbing Code</h2>
+            <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: var(--primary);" onclick="startQuiz(false)">Start Practice Mode</button>
+            <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: #e67e22;" onclick="startQuiz(true)">Start Exam Mode (60 mins)</button>
+            <button id="resume-btn" class="nav-btn next" style="display:none; width:100%; margin-bottom:15px; background: #27ae60;" onclick="resumeQuiz()">Resume Saved Practice</button>
+        </div>
+    `;
+    quizContainer.style.display = 'none';
+    appContainer.insertAdjacentHTML('afterbegin', startMenuHTML);
+    const savedState = localStorage.getItem('weeklyTest1_state');
+    if (savedState) document.getElementById('resume-btn').style.display = 'block';
+
+    const header = document.querySelector('.header');
+    header.insertAdjacentHTML('afterend', '<div id="timer-display" style="display:none; text-align:center; font-size:1.5rem; font-weight:bold; color:#e74c3c; margin-bottom:15px;"></div>');
+
+    function startQuiz(examMode) {
+        document.getElementById('start-menu').style.display = 'none';
+        quizContainer.style.display = 'block';
+        isExamMode = examMode;
+        questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+        currentQ = 0;
+        userAnswers = new Array(questionsList.length).fill(null);
+        if (isExamMode) {
+            for (let i = questionsList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionsList[i], questionsList[j]] = [questionsList[j], questionsList[i]];
+            }
+            startTimer(60 * 60);
+        }
+        updateScore(); saveState(); loadQuestion();
+    }
+
+    function resumeQuiz() {
+        const state = JSON.parse(localStorage.getItem('weeklyTest1_state'));
+        if (state) {
+            document.getElementById('start-menu').style.display = 'none';
+            quizContainer.style.display = 'block';
+            questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+            currentQ = state.currentQ;
+            userAnswers = state.userAnswers;
+            isExamMode = false;
+            updateScore(); loadQuestion();
+        }
+    }
+
+    function startTimer(seconds) {
+        timeLeft = seconds;
+        document.getElementById('timer-display').style.display = 'block';
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            if (timeLeft <= 0) { clearInterval(timerInterval); showResults(true); }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        document.getElementById('timer-display').innerText = 'Time: ' + m.toString().padStart(2, '0') + ':' + s.toString().padStart(2, '0');
+    }
+
+    function saveState() {
+        if (isExamMode) return;
+        localStorage.setItem('weeklyTest1_state', JSON.stringify({ currentQ, userAnswers }));
+    }
+
+    function updateScore() {
+        let s = 0;
+        questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const scoreSpan = document.querySelector('.score');
+        if (isExamMode) scoreSpan.style.display = 'none';
+        else { scoreSpan.style.display = 'inline'; document.getElementById('score-val').innerText = s; }
+    }
+
+    function loadQuestion() {
+        const q = questionsList[currentQ];
+        document.getElementById('q-counter').innerText = 'Q: ' + (currentQ + 1) + ' / ' + questionsList.length;
+        let qText = q.q;
+        if (isExamMode) qText = qText.replace(/^\d+\.\s*/, '');
+        document.getElementById('question-text').innerHTML = qText;
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        let displayOpts = q.opts.map((text, index) => ({ text, index }));
+        if (isExamMode) {
+            if (!q.shuffledOrder) {
+                for (let i = displayOpts.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [displayOpts[i], displayOpts[j]] = [displayOpts[j], displayOpts[i]];
+                }
+                q.shuffledOrder = displayOpts.map(o => o.index);
+            } else {
+                displayOpts = q.shuffledOrder.map(idx => ({ text: q.opts[idx], index: idx }));
+            }
+        }
+        displayOpts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerHTML = String.fromCharCode(65 + i) + '. ' + opt.text.replace(/^[A-D]\.\s*/, '');
+            btn.onclick = () => checkAnswer(opt.index, btn, displayOpts);
+            optsContainer.appendChild(btn);
+        });
+        document.getElementById('info-box').style.display = 'none';
+        document.getElementById('prev-btn').style.display = currentQ > 0 ? 'block' : 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        if (userAnswers[currentQ] !== null) {
+            const buttons = document.querySelectorAll('.btn');
+            const selectedIdx = userAnswers[currentQ];
+            displayOpts.forEach((opt, btnIdx) => {
+                const btn = buttons[btnIdx];
+                if (isExamMode) {
+                    if (opt.index === selectedIdx) { btn.style.border = '2px solid var(--primary)'; btn.style.background = '#eef7fd'; }
+                } else {
+                    btn.disabled = true;
+                    if (opt.index === selectedIdx) btn.classList.add(opt.index === q.ans ? 'correct' : 'wrong');
+                    if (opt.index === q.ans) btn.classList.add('correct');
+                }
+            });
+            if (!isExamMode) {
+                document.getElementById('info-box').innerHTML = '<strong>Review Note:</strong> ' + q.info + (q.other_defs || '');
+                document.getElementById('info-box').style.display = 'block';
+            }
+            showNextButton();
+        }
+    }
+
+    function checkAnswer(idx, btn, displayOpts) {
+        if (!isExamMode && userAnswers[currentQ] !== null) return;
+        userAnswers[currentQ] = idx;
+        updateScore(); saveState();
+        const buttons = document.querySelectorAll('.btn');
+        const q = questionsList[currentQ];
+        if (!isExamMode) {
+            buttons.forEach(b => b.disabled = true);
+            btn.classList.add(idx === q.ans ? 'correct' : 'wrong');
+            if (idx !== q.ans) {
+                displayOpts.forEach((opt, bi) => {
+                    if (opt.index === q.ans) buttons[bi].classList.add('correct');
+                });
+            }
+            document.getElementById('info-box').innerHTML = '<strong>Review Note:</strong> ' + q.info + (q.other_defs || '');
+            document.getElementById('info-box').style.display = 'block';
+        } else {
+            buttons.forEach(b => { b.style.border = '2px solid #e9ecef'; b.style.background = '#f8f9fa'; });
+            btn.style.border = '2px solid var(--primary)'; btn.style.background = '#eef7fd';
+        }
+        showNextButton();
+    }
+
+    function showNextButton() {
+        const btn = document.getElementById('next-btn');
+        btn.innerText = currentQ < questionsList.length - 1 ? 'Next \u27a1' : 'Finish \ud83c\udfc6';
+        btn.style.display = 'block';
+    }
+
+    function prevQuestion() { if (currentQ > 0) { currentQ--; loadQuestion(); window.scrollTo(0, 0); } }
+    function nextQuestion() {
+        if (currentQ < questionsList.length - 1) { currentQ++; loadQuestion(); window.scrollTo(0, 0); }
+        else showResults();
+    }
+
+    function showResults(timesUp) {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('timer-display').style.display = 'none';
+        let s = 0;
+        questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const p = Math.round((s / questionsList.length) * 100);
+        let msg = p >= 80 ? 'Excellent work!' : (p >= 60 ? 'Good job!' : 'Keep studying!');
+        if (timesUp) msg = "Time's up! " + msg;
+        quizContainer.innerHTML =
+            '<div class="result-screen">' +
+            '<h2 style="color: var(--primary);">Quiz Complete!</h2>' +
+            '<p style="font-size: 1.2rem;">You scored <strong>' + s + '</strong> out of <strong>' + questionsList.length + '</strong> (' + p + '%).</p>' +
+            '<p>' + msg + '</p>' +
+            '<button class="nav-btn next" style="display:block; width:100%; margin-top:15px; background: #f39c12;" onclick="showReview()">Review All Answers</button>' +
+            '<button class="nav-btn next" style="display:block; width:100%; margin-top:15px;" onclick="location.reload()">Return to Main Menu</button>' +
+            '</div>';
+    }
+
+    function showReview() {
+        let reviewHTML = '<div style="text-align:left;"><h2 style="color:var(--primary);text-align:center;">Exam Review</h2><p style="text-align:center;margin-bottom:20px;">Correct answers highlighted in green. Your incorrect choices shown in red.</p>';
+        questionsList.forEach(function(q, i) {
+            var uAns = userAnswers[i];
+            var isCorrect = uAns === q.ans;
+            var unanswered = uAns === null || uAns === undefined;
+            var qStatus = isCorrect
+                ? '<span style="color:var(--correct);font-weight:bold;float:right;">Correct</span>'
+                : (unanswered ? '<span style="color:#f39c12;font-weight:bold;float:right;">Unanswered</span>'
+                              : '<span style="color:var(--wrong);font-weight:bold;float:right;">Incorrect</span>');
+            var borderColor = isCorrect ? 'var(--correct)' : (unanswered ? '#f39c12' : 'var(--wrong)');
+            var qTextClean = q.q.replace(/^\d+\.\s*/, '');
+            reviewHTML += '<div style="margin-bottom:30px;padding:20px;border:2px solid ' + borderColor + ';border-radius:12px;background:#fff;box-shadow:0 4px 6px rgba(0,0,0,0.05);">';
+            reviewHTML += '<div style="font-weight:600;font-size:1.1rem;margin-bottom:15px;color:var(--text);">' + qStatus + (i+1) + '. ' + qTextClean + '</div>';
+            reviewHTML += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:15px;">';
+            q.opts.forEach(function(opt, optIdx) {
+                var cleanOpt = opt.replace(/^[A-D]\.\s*/, '');
+                var style = 'padding:12px;border-radius:8px;border:1px solid #e9ecef;background:#f8f9fa;color:var(--text);';
+                var label = String.fromCharCode(65 + optIdx) + '. ' + cleanOpt;
+                if (optIdx === q.ans) {
+                    style = 'padding:12px;border-radius:8px;border:2px solid var(--correct);background:var(--correct-bg);color:#1e8449;font-weight:700;';
+                    label += ' (Correct Answer)';
+                } else if (optIdx === uAns && !isCorrect) {
+                    style = 'padding:12px;border-radius:8px;border:2px solid var(--wrong);background:var(--wrong-bg);color:#922b21;text-decoration:line-through;opacity:0.8;';
+                    label += ' (Your Choice)';
+                } else if (optIdx === uAns && isCorrect) {
+                    label += ' (Your Choice)';
+                }
+                reviewHTML += '<div style="' + style + '">' + label + '</div>';
+            });
+            reviewHTML += '</div>';
+            var infoContent = '';
+            if (q.info) infoContent += '<strong>Review Note:</strong> ' + q.info + '<br>';
+            if (q.other_defs) infoContent += q.other_defs;
+            if (infoContent) {
+                reviewHTML += '<div style="padding:15px;background:var(--info-bg);border-left:5px solid var(--info-border);border-radius:6px;font-size:0.95rem;line-height:1.5;">' + infoContent + '</div>';
+            }
+            reviewHTML += '</div>';
+        });
+        reviewHTML += '<button class="nav-btn next" style="display:block;width:100%;margin-top:25px;background:var(--primary);" onclick="location.reload()">Return to Main Menu</button></div>';
+        quizContainer.innerHTML = reviewHTML;
+        window.scrollTo(0, 0);
+    }
+
+</script>
+</body>
+</html>

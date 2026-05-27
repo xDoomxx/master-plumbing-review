@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weekly Test 6 - SPDI</title>
+    <style>
+        :root {
+            --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; --primary: #3498db;
+            --correct: #2ecc71; --correct-bg: #e8f8f5; --wrong: #e74c3c; --wrong-bg: #fdedec;
+            --info-border: #f39c12; --info-bg: #fef9e7; --secondary: #95a5a6;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
+        #app { background: var(--card-bg); width: 100%; max-width: 600px; padding: 25px 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); align-self: flex-start; margin-top: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1.1rem; padding-bottom: 15px; border-bottom: 2px solid #eee; margin-bottom: 25px; color: #7f8c8d; }
+        .score { color: var(--primary); }
+        .question { font-size: 1.25rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .btn { width: 100%; text-align: left; background: #f8f9fa; border: 2px solid #e9ecef; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 500; color: var(--text); cursor: pointer; transition: all 0.2s ease; outline: none; }
+        .btn:hover:not(:disabled) { background: #e2e6ea; border-color: #dae0e5; transform: translateY(-1px); }
+        .btn:disabled { cursor: default; opacity: 0.9; }
+        .btn.correct { background: var(--correct-bg); border-color: var(--correct); color: #1e8449; font-weight: 700; }
+        .btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: #922b21; text-decoration: line-through; opacity: 0.7; }
+        .info-box { margin-top: 25px; padding: 15px; background: var(--info-bg); border-left: 5px solid var(--info-border); border-radius: 6px; font-size: 0.95rem; line-height: 1.5; display: none; animation: fadeIn 0.4s ease; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 25px; }
+        .nav-btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.2s; display: none; }
+        .nav-btn.prev { background: var(--secondary); color: white; }
+        .nav-btn.next { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(52,152,219,0.3); }
+        .home-btn { background: var(--secondary); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .result-screen { text-align: center; padding: 20px 0; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="quiz-container">
+        <div class="header">
+            <button class="home-btn" onclick="location.reload()">Home</button>
+            <span id="q-counter">Q: 1/50</span>
+            <span class="score">Score: <span id="score-val">0</span></span>
+        </div>
+        <div id="question-text" class="question"></div>
+        <div id="options-container" class="options"></div>
+        <div id="info-box" class="info-box"></div>
+        <div class="nav-buttons">
+            <button id="prev-btn" class="nav-btn prev" onclick="prevQuestion()">Prev</button>
+            <button id="next-btn" class="nav-btn next" onclick="nextQuestion()">Next</button>
+        </div>
+    </div>
+</div>
+<script>
+const HR = '<hr style="border:0;border-top:1px solid #e1e8ed;margin:15px 0;">';
+const OL = '<strong>Other Options:</strong><ul style="margin-top:5px;padding-left:20px;font-size:0.9rem;">';
+const CL = '</ul>';
+function li(label, def) { return '<li><strong>' + label + ':</strong> ' + def + '</li>'; }
+
+const allQuestions = [
+  { q: "1. The water which comes from lavatories, floor drains, laundry tubs is referred to as _____.", opts: ["Black water", "Polluted Water", "Grey Water", "Soft Water"], ans: 2, info: "Correct Answer: Grey Water", other_defs: HR+OL+li("Black water","Wastewater from toilets containing human waste and pathogens. Requires a higher level of treatment before disposal.")+li("Polluted Water","A general term for any water contaminated with harmful substances. Not a specific plumbing classification.")+li("Soft Water","Water with low concentrations of calcium and magnesium ions. A water hardness classification, not a wastewater type.")+CL },
+  { q: "2. What might be the reason why riprap is placed at the end of a storm drainage pipe?", opts: ["To dissipate the energy of water", "To hold up the headwall", "To increase infiltration in the outfall area", "To decrease the interior diameter of the pipe"], ans: 0, info: "Correct Answer: To dissipate the energy of water", other_defs: HR+OL+li("To hold up the headwall","The headwall is a concrete structure that supports the pipe end. Riprap is placed beyond it, not to support it.")+li("To increase infiltration","Riprap reduces erosion; it does not function as an infiltration device.")+li("To decrease the interior diameter","Riprap is placed externally at the outfall. It has no effect on the pipe interior.")+CL },
+  { q: "3. Minimum trap size of bathtub", opts: ['3/4"', '2"', '1 1/4"', '1 1/2"'], ans: 3, info: 'Correct Answer: 1 1/2"', other_defs: HR+OL+li('3/4"',"Below the minimum allowable trap size in any DWV application per NPCP.")+li('2"',"The minimum trap size for showers and floor drains, not bathtubs.")+li('1 1/4"',"The minimum trap size for lavatories (washbasins), not bathtubs.")+CL },
+  { q: "4. Water above the filter sand that provides hydraulic head for the process.", opts: ["Supernatant", "Schmutzdecke", "Scum", "Sludge"], ans: 0, info: "Correct Answer: Supernatant", other_defs: HR+OL+li("Schmutzdecke","The biological layer that forms on the surface of slow sand filters. It performs purification, but is not the water above the sand.")+li("Scum","Floating grease and solids on the surface of a sedimentation or septic tank. Not related to filtration processes.")+li("Sludge","Settled solids that accumulate at the bottom of sedimentation tanks, digesters, or septic tanks.")+CL },
+  { q: "5. In reverse osmosis process, why is pressure being applied to the water?", opts: ["To disinfect water", "To allow contaminants to settle down", "To force water through a semipermeable membrane", "To lower concentration of contaminants"], ans: 2, info: "Correct Answer: To force water through a semipermeable membrane", other_defs: HR+OL+li("To disinfect water","Disinfection is achieved through chlorination, UV radiation, or ozonation - not pressure.")+li("To allow contaminants to settle down","Settling by gravity is the principle of sedimentation, not reverse osmosis.")+li("To lower concentration of contaminants","The result of RO is lower contaminant concentration, but pressure is applied mechanically to push water through the membrane.")+CL },
+  { q: "6. What can be the effect in the water distribution system, if the pH level is 4-5?", opts: ["Water can become stale.", "Pipe scaling can rapidly form.", "Metal from pipes can leach to the water.", "Molds and algae can grow inside the pipeline."], ans: 2, info: "Correct Answer: Metal from pipes can leach to the water.", other_defs: HR+OL+li("Water can become stale","Staleness is associated with low dissolved oxygen or microbial activity, not specifically acidic pH.")+li("Pipe scaling can rapidly form","Scale forms in alkaline (high pH) conditions where minerals precipitate. Low pH is corrosive, not scale-forming.")+li("Molds and algae can grow","Algae and mold growth is more common at neutral to slightly alkaline pH with organic matter present, not at strongly acidic pH 4-5.")+CL },
+  { q: "7. Water connection size for flushometer-tank WC", opts: ["10 mm", "19 mm", "25 mm", "13 mm"], ans: 0, info: "Correct Answer: 10 mm", other_defs: HR+OL+li("19 mm","The minimum size for a water service pipe per NPCP, not a fixture connection size.")+li("25 mm","Used for larger supply branches or building water service lines.")+li("13 mm","Typical connection size for ballcock/float valve on gravity tank-type WC, not a flushometer-tank type.")+CL },
+  { q: "8. This level of water supply is also referred to as communal faucet system.", opts: ["Level 1", "Level 2", "Level 3", "None of the choices"], ans: 1, info: "Correct Answer: Level 2", other_defs: HR+OL+li("Level 1","A point source (e.g., protected well or spring) serving individual households. Users collect water and carry it home.")+li("Level 3","A fully piped system with individual household service connections and plumbing fixtures inside the home.")+li("None of the choices","Level 2 is explicitly defined as a communal faucet or standpost system in Philippine water supply standards.")+CL },
+  { q: "9. The presence of _____ causes bad taste and odor in water.", opts: ["Algae", "Oxygen", "Calcium and Magnesium", "Carbon Dioxide"], ans: 0, info: "Correct Answer: Algae", other_defs: HR+OL+li("Oxygen","Dissolved oxygen actually improves the taste of water. Low oxygen can cause musty odors, but oxygen itself is not the culprit.")+li("Calcium and Magnesium","These minerals cause water hardness and scaling, not bad taste and odor.")+li("Carbon Dioxide","Dissolved CO2 makes water slightly acidic and mildly tart, but is not the primary cause of bad taste and odor.")+CL },
+  { q: "10. The transition from the solid phase to the gas phase without passing through an intermediate liquid phase.", opts: ["Desublimation", "Deposition", "Sublimation", "Evaporation"], ans: 2, info: "Correct Answer: Sublimation", other_defs: HR+OL+li("Desublimation","Also known as deposition. The reverse of sublimation: gas converts directly to solid (e.g., frost forming).")+li("Deposition","Another name for desublimation. Gas-to-solid phase change, the reverse of sublimation.")+li("Evaporation","Liquid-to-gas phase change. Requires an intermediate liquid phase, unlike sublimation.")+CL },
+  { q: "11. Most practical pump used for hot water system", opts: ["Piston Pump", "Centrifugal Pump", "Sump Pump", "Gear Pump"], ans: 1, info: "Correct Answer: Centrifugal Pump", other_defs: HR+OL+li("Piston Pump","A positive displacement pump that delivers water in pulses. Not ideal for continuous hot water circulation.")+li("Sump Pump","Designed to remove accumulated water from low-lying areas like basements. Not used for hot water supply systems.")+li("Gear Pump","A positive displacement pump typically used for viscous fluids like oils. Not suited for hot water circulation in plumbing systems.")+CL },
+  { q: "12. A mechanical device used to circulate hot water to the plumbing fixtures. Recommended for large buildings where difficulty of providing natural circulation of hot water is encountered.", opts: ["Centrifugal pump", "Pump Circuit System", "Circulating Pump", "Bypass"], ans: 1, info: "Correct Answer: Pump Circuit System", other_defs: HR+OL+li("Centrifugal pump","A type of pump, not a system. It may be a component within a pump circuit system but does not describe the complete arrangement.")+li("Circulating Pump","A pump component that moves hot water through the system. The Pump Circuit System is the complete setup including piping, controls, and return lines.")+li("Bypass","A pipe arrangement that allows flow to go around a component for maintenance, not a hot water circulation system.")+CL },
+  { q: "13. When the well is excavated in the confined aquifer, and the water in the well reaches over the water table but not on the surface of the earth. Such a well is known as an _____.", opts: ["Artesian Well", "Flowing Well", "Drilled Well", "Bored Well"], ans: 0, info: "Correct Answer: Artesian Well", other_defs: HR+OL+li("Flowing Well","Also taps a confined aquifer, but the water rises above the ground surface. A flowing well is an artesian well where pressure is sufficient to cause overflow.")+li("Drilled Well","Describes the construction method. Drilled wells can be artesian or non-artesian depending on the aquifer tapped.")+li("Bored Well","Excavated using earth augers, typically shallow. Generally not associated with confined aquifers or artesian conditions.")+CL },
+  { q: "14. The type of valve incorporated in a corporation stop.", opts: ["Backwater Valve", "Globe Valve", "Gate Valve", "Check Valve"], ans: 2, info: "Correct Answer: Gate Valve", other_defs: HR+OL+li("Backwater Valve","A drainage fitting that prevents sewage backflow into a building. Installed in drain lines, not supply connections.")+li("Globe Valve","Used for throttling or regulating flow. Not used in corporation stops because it creates high head loss.")+li("Check Valve","Allows flow in one direction only, preventing backflow. Not incorporated into a corporation stop, which requires manual shutoff capability.")+CL },
+  { q: "15. The smallest diameter pipe that can be installed in a DWV system is _____.", opts: ['1 1/4"', '1 1/2"', '2"', '1"'], ans: 0, info: 'Correct Answer: 1 1/4"', other_defs: HR+OL+li('1 1/2"',"The minimum drain pipe size for bathtubs and horizontal fixture branches serving bathtubs. Larger than the absolute minimum.")+li('2"',"Required for shower drains and larger fixture branches. Not the smallest allowable.")+li('1"',"Below the minimum allowable pipe size in a DWV system per NPCP.")+CL },
+  { q: "16. If hot water pipes are insulated, the heat loss from pipes is reduced by up to _____.", opts: ["60%", "40%", "30%", "80%"], ans: 3, info: "Correct Answer: 80%", other_defs: HR+OL+li("60%","Understates the effectiveness of pipe insulation. Proper insulation achieves significantly greater reduction.")+li("40%","Far below the actual heat retention benefit of properly insulated hot water pipes.")+li("30%","This value represents minimal or inadequate insulation performance, not the potential achievable with proper installation.")+CL },
+  { q: "17. What is a treatment for water acidity?", opts: ["Passing through marble filter", "Manganese Zeolite", "Filtration", "Chlorination"], ans: 0, info: "Correct Answer: Passing through marble filter", other_defs: HR+OL+li("Manganese Zeolite","Used to remove iron and manganese from water through oxidation-filtration. Not a treatment for acidity.")+li("Filtration","Removes turbidity and suspended particles. Does not neutralize acid or raise pH.")+li("Chlorination","A disinfection method that kills pathogens. It slightly lowers pH and is not a treatment for acidity.")+CL },
+  { q: "18. It refers to the transmission of pathogens through vehicles such as water, food, and air.", opts: ["Carrier", "Vehicle", "Vector", "Contact"], ans: 1, info: "Correct Answer: Vehicle", other_defs: HR+OL+li("Carrier","A person or animal infected with a pathogen but showing no symptoms who can transmit disease. Not an inanimate medium of transmission.")+li("Vector","A living organism (e.g., mosquito, fly) that transmits pathogens. Biologically active, unlike inanimate vehicles.")+li("Contact","Transmission through direct person-to-person contact or contaminated surfaces. Does not involve a fluid or food medium.")+CL },
+  { q: "19. What is the area called 'zone of saturation' in a well?", opts: ["The area below the water table", "The subsurface area where plants can receive nutrients", "The area behind the well casing", "The surrounding area where cone of depression occurs"], ans: 0, info: "Correct Answer: The area below the water table", other_defs: HR+OL+li("The subsurface area where plants can receive nutrients","This describes the root zone or vadose zone - the unsaturated zone above the water table.")+li("The area behind the well casing","This refers to the annular space between the casing and borehole wall, typically filled with grout or gravel pack.")+li("The surrounding area where cone of depression occurs","The cone of depression is a localized lowering of the water table around a pumping well. It forms within the zone of saturation but is not the zone itself.")+CL },
+  { q: "20. Refers to the maximum and minimum pressure at which proper function of the water supply system can be maintained.", opts: ["Critical Pressure", "Head Loss by Friction", "Normal Pressure", "Pressure Loss"], ans: 0, info: "Correct Answer: Critical Pressure", other_defs: HR+OL+li("Head Loss by Friction","The reduction in pressure caused by friction as water flows through pipes. It is a loss value, not a design pressure range.")+li("Normal Pressure","The typical or average operating pressure. Does not define the allowable maximum and minimum range.")+li("Pressure Loss","A general term for any drop in pressure in the system. Does not refer to the designed operating pressure range for proper function.")+CL },
+  { q: "21. Characterized by a low Reynolds number. This occurs when the fluid flows in infinitesimal parallel layers with no disruption between them.", opts: ["Turbulent Flow", "Axial Flow", "Mixed Flow", "Laminar Flow"], ans: 3, info: "Correct Answer: Laminar Flow", other_defs: HR+OL+li("Turbulent Flow","Characterized by a high Reynolds number (typically >4000). Flow is chaotic with eddies and cross-currents - the opposite of laminar flow.")+li("Axial Flow","Refers to flow along the axis of rotation in pumps. It is a pump type classification, not a flow regime.")+li("Mixed Flow","A pump type that combines axial and centrifugal flow characteristics. Not defined by Reynolds number in the way laminar flow is.")+CL },
+  { q: "22. This material is not used in lavatories as water becomes black or brown.", opts: ["Lead", "Zinc", "Copper", "Iron"], ans: 3, info: "Correct Answer: Iron", other_defs: HR+OL+li("Lead","Used in old plumbing and soldering. Causes water toxicity (lead poisoning), not necessarily black or brown discoloration.")+li("Zinc","Used in galvanizing steel pipes. White rust (zinc carbonate) can form, but it does not cause black or brown water.")+li("Copper","Widely used in plumbing. May cause a slight blue-green tinge in soft, acidic water but does not turn water black or brown.")+CL },
+  { q: "23. Heat transfer occurs through electromagnetic waves without involving particles.", opts: ["Conduction", "Convection", "Adiabatic process", "Radiation"], ans: 3, info: "Correct Answer: Radiation", other_defs: HR+OL+li("Conduction","Heat transfer through direct contact between molecules. Requires a solid medium - the opposite of radiation, which needs no medium.")+li("Convection","Heat transfer through the movement of fluid. Requires particles to carry thermal energy.")+li("Adiabatic process","A thermodynamic process in which no heat is exchanged with the surroundings. It is a process condition, not a heat transfer mechanism.")+CL },
+  { q: "24. What is the purpose of a weir outlet?", opts: ["To expedite the velocity of the stormwater discharge", "To control the overflow of stormwater", "To facilitate sedimentation of stormwater discharge", "To prevent the overflow of stormwater"], ans: 1, info: "Correct Answer: To control the overflow of stormwater", other_defs: HR+OL+li("To expedite the velocity","A weir actually slows and controls discharge flow. Increasing velocity would cause erosion and is counterproductive.")+li("To facilitate sedimentation","Sedimentation occurs in basins designed to slow flow. A weir outlet is a flow control structure, not a sedimentation device.")+li("To prevent the overflow","A weir allows controlled overflow above its crest. It manages, not prevents, overflow.")+CL },
+  { q: "25. The minimum size of a water service pipe is _____.", opts: ["19 mm", "25 mm", "32 mm", "13 mm"], ans: 0, info: "Correct Answer: 19 mm (3/4\")", other_defs: HR+OL+li("25 mm","A common size for larger residential or small commercial water service connections, but not the minimum per NPCP.")+li("32 mm","Used for buildings with higher water demand. Above the minimum.")+li("13 mm","Below the minimum allowable water service pipe size per NPCP. Insufficient for adequate flow to most buildings.")+CL },
+  { q: "26. What is that receptacle installed at a corner wall that collects rain water from a balcony?", opts: ["Beehive roof drain", "Scupper drain", "Roof Drain", "Downspout"], ans: 1, info: "Correct Answer: Scupper drain", other_defs: HR+OL+li("Beehive roof drain","A roof drain with a dome-shaped strainer installed on flat roofs. Not a wall-mounted corner receptacle.")+li("Roof Drain","A general term for any drain installed on a roof surface. Does not specifically refer to a corner wall installation.")+li("Downspout","A vertical pipe that conveys rainwater from the roof or scupper down to the drainage system. It carries water away, not the collection point itself.")+CL },
+  { q: "27. Water for domestic use comes from these sources except _____.", opts: ["Ground water", "Rain water", "Surface water", "Sea water"], ans: 3, info: "Correct Answer: Sea water", other_defs: HR+OL+li("Ground water","Water extracted from aquifers through wells. A primary source of potable water worldwide and in the Philippines.")+li("Rain water","Collected through rainwater harvesting systems. Used for domestic purposes after treatment.")+li("Surface water","Water from rivers, lakes, and reservoirs. A major source for municipal water supply systems after treatment.")+CL },
+  { q: "28. A tank made of heavy-duty stainless sheet of diameter varying from 60 to 130 cm and not more than 5 meters long.", opts: ["Range Boiler", "Storage Tank", "Pump Circuit", "Steam Tank"], ans: 1, info: "Correct Answer: Storage Tank", other_defs: HR+OL+li("Range Boiler","A cylindrical hot water storage vessel heated indirectly by a boiler coil. Smaller and used in conjunction with a boiler.")+li("Pump Circuit","A hot water circulation system arrangement - not a physical storage vessel.")+li("Steam Tank","Not a standard plumbing term. Steam systems use boilers and heat exchangers.")+CL },
+  { q: "29. A well dug with the use of earth augers.", opts: ["Driven well", "Drilled well", "Bored well", "Dug well"], ans: 2, info: "Correct Answer: Bored well", other_defs: HR+OL+li("Driven well","Constructed by driving connected pipes or a well point into the ground. No excavation or augering involved.")+li("Drilled well","Constructed using rotary or percussion drilling equipment. Goes deeper than bored wells.")+li("Dug well","Excavated by hand using picks and shovels. Large in diameter and typically shallow. Does not use earth augers.")+CL },
+  { q: "30. Water Quality Guidelines and General Effluent Standards of 2016", opts: ["DENR AO 2016-08", "DENR AO 2016-19", "DENR AO 2016-02", "DENR AO 2016-35"], ans: 0, info: "Correct Answer: DENR AO 2016-08", other_defs: HR+OL+li("DENR AO 2016-19","Added as a distractor. Not the issuance covering water quality guidelines and effluent standards.")+li("DENR AO 2016-02","Added as a distractor. Not related to water quality guidelines.")+li("DENR AO 2016-35","Added as a distractor. Not the correct administrative order for this topic.")+CL },
+  { q: "31. The method used for transferring heat in a gravity domestic hot-water circulation system.", opts: ["Advection", "Convection", "Conduction", "Radiation"], ans: 1, info: "Correct Answer: Convection", other_defs: HR+OL+li("Advection","The horizontal transport of heat by fluid motion, used in meteorology. Not the mechanism driving gravity hot water circulation in buildings.")+li("Conduction","Heat transfer through direct contact between solids. Gravity hot water systems rely on density differences in moving water.")+li("Radiation","Heat transfer via electromagnetic waves. Hot water circulation is a fluid-based system driven by density differences - a convective process.")+CL },
+  { q: "32. ASTM of PVC Sewer Pipe and Fittings", opts: ["ASTM D1785", "ASTM F441", "ASTM D2239", "ASTM D2729"], ans: 3, info: "Correct Answer: ASTM D2729", other_defs: HR+OL+li("ASTM D1785","Standard Specification for PVC Plastic Pipe, Schedules 40, 80, and 120. Used for pressure applications, not sewer service.")+li("ASTM F441","Standard Specification for CPVC Plastic Pipe, Schedules 40 and 80. Used for hot and cold water distribution, not sewer pipe.")+li("ASTM D2239","Standard Specification for Polyethylene (PE) Plastic Pipe (SIDR-PR). A polyethylene pipe standard, not PVC sewer pipe.")+CL },
+  { q: "33. Filtration through activated carbon purifier filtration is a correction for the presence of _____ in the water.", opts: ["Color", "Taste or Odor", "Pollution", "Turbidity"], ans: 1, info: "Correct Answer: Taste or Odor", other_defs: HR+OL+li("Color","Treated by coagulation-flocculation, sedimentation, and filtration. Activated carbon is not the primary treatment for color.")+li("Pollution","A general term covering a wide range of contaminants. Activated carbon specifically adsorbs organic compounds causing taste and odor.")+li("Turbidity","Treated by sedimentation and mechanical filtration. Requires straining suspended particles, not adsorption by activated carbon.")+CL },
+  { q: "34. Hot water consumption for factories", opts: ["4 to 5 gpph", "4 to 6 gpph", "8 gpph", "8 to 10 gpph"], ans: 1, info: "Correct Answer: 4 to 6 gpph (gallons per person per hour)", other_defs: HR+OL+li("4 to 5 gpph","Too narrow a range and understates the upper end of factory hot water consumption.")+li("8 gpph","Typical for office buildings where hand washing is more frequent. Higher than factory usage.")+li("8 to 10 gpph","Typical for residences or hotels with bathing requirements. Much higher than the factory standard.")+CL },
+  { q: "35. The potable water system or part thereof shall be filled with water-chlorine solution containing not less than _____ of chlorine and allowed to stand for 3 hours.", opts: ["100 ppm", "50 ppm", "150 ppm", "200 ppm"], ans: 3, info: "Correct Answer: 200 ppm", other_defs: HR+OL+li("100 ppm","Below the required concentration per NPCP. Insufficient to ensure complete disinfection of the water system.")+li("50 ppm","Far below the required minimum. Only appropriate for very mild disinfection scenarios.")+li("150 ppm","Still below the NPCP-required minimum of 200 ppm for the 3-hour contact time to be effective.")+CL },
+  { q: "36. A pH below 7 indicates _____.", opts: ["Acidic", "Neutral", "Alkaline", "Basic"], ans: 0, info: "Correct Answer: Acidic", other_defs: HR+OL+li("Neutral","pH exactly equal to 7. Hydrogen ion and hydroxide ion concentrations are equal.")+li("Alkaline","pH greater than 7. Common in water with high carbonate and bicarbonate content.")+li("Basic","Same as alkaline - pH greater than 7. Both terms describe water with excess hydroxide ions.")+CL },
+  { q: "37. In areas with high rainfall intensity, which driveway material can be prone to flash flood?", opts: ["Compacted dirt", "Asphalt", "Porous pavement", "Coarse gravel"], ans: 1, info: "Correct Answer: Asphalt", other_defs: HR+OL+li("Compacted dirt","Absorbs some rainfall but erodes in heavy rain. Contributes to runoff but also allows some infiltration, unlike impermeable asphalt.")+li("Porous pavement","Designed specifically to allow rainwater to infiltrate through the surface into the ground. Reduces runoff and flash flood risk.")+li("Coarse gravel","Highly permeable. Rainwater drains through the voids between particles, significantly reducing surface runoff.")+CL },
+  { q: "38. The hot water system that is an efficient type, generally used in buildings of extreme heights.", opts: ["Overhead Feed and Gravity Return System", "Up-feed and Gravity Return System", "Overhead Feed System", "Direct Up-feed Pumping System"], ans: 0, info: "Correct Answer: Overhead Feed and Gravity Return System", other_defs: HR+OL+li("Up-feed and Gravity Return System","Used in low to medium-rise buildings. Not suitable for extreme heights as the pump must overcome the full building height for supply.")+li("Overhead Feed System","Lacks a return line. Without circulation, water in the pipes cools down, leading to water waste. Not efficient.")+li("Direct Up-feed Pumping System","Requires continuous pumping for both supply and return. Less efficient for extreme heights due to high pump energy consumption.")+CL },
+  { q: "39. Pipes installed to provide flow of air to or from drainage system or to provide a circulation of air within such system to protect trap seals from siphonage and backpressure.", opts: ["Vent Pipe", "Vent Stack", "Vent System", "Yoke Vent"], ans: 2, info: "Correct Answer: Vent System", other_defs: HR+OL+li("Vent Pipe","A single pipe installed to vent a plumbing fixture or drainage line. It is a component of the vent system, not the complete system.")+li("Vent Stack","A vertical vent pipe that serves multiple floors or fixtures. A major element of the vent system but not the entire system.")+li("Yoke Vent","A pipe connecting a vent stack to a soil or waste stack to equalize pressure. A specific component, not the entire system.")+CL },
+  { q: "40. When copper and steel contact each other, especially when dampness is present, a chemical action called _____ occurs.", opts: ["Acidity", "Electrolysis", "Stress Corrosion", "Erosion Corrosion"], ans: 1, info: "Correct Answer: Electrolysis", other_defs: HR+OL+li("Acidity","A condition of low pH in water. While acidic water accelerates corrosion, it is not the specific term for the electrochemical reaction between dissimilar metals.")+li("Stress Corrosion","A form of corrosion that occurs when a metal is exposed to a corrosive environment under tensile stress. Not related to dissimilar metal contact.")+li("Erosion Corrosion","Caused by the combined action of mechanical erosion (fast-moving fluid) and chemical corrosion. Not the result of dissimilar metal contact.")+CL },
+  { q: "41. The following are physical traits of water except _____.", opts: ["Dissolved Oxygen", "Odor", "Color", "Turbidity"], ans: 0, info: "Correct Answer: Dissolved Oxygen (it is a chemical, not physical, parameter)", other_defs: HR+OL+li("Odor","A physical (organoleptic) property of water detected by smell. One of the sensory parameters used to assess water quality.")+li("Color","A physical property measured by how much light is absorbed by the water. True color and apparent color are both physical traits.")+li("Turbidity","A physical property representing the cloudiness of water caused by suspended particles. Measured in NTU.")+CL },
+  { q: "42. Suspended solids are removed from the water by gravity settling and deposition.", opts: ["Filtration", "Disinfection", "Aeration", "Sedimentation"], ans: 3, info: "Correct Answer: Sedimentation", other_defs: HR+OL+li("Filtration","Removes particles by passing water through a porous medium. Relies on straining and adsorption, not solely gravity settling.")+li("Disinfection","The process of killing or inactivating pathogenic microorganisms using chlorine, UV, or ozone. Does not remove suspended solids.")+li("Aeration","Introduces air into water to remove dissolved gases and oxidize iron and manganese. Does not remove suspended solids by gravity settling.")+CL },
+  { q: "43. A sanitary sewer that conveys sanitary waste to a dispersal plant.", opts: ["Combination Public Sewer", "Contributing Sewer", "Tributary Sewer", "Intercepting Sewer"], ans: 3, info: "Correct Answer: Intercepting Sewer", other_defs: HR+OL+li("Combination Public Sewer","A sewer that carries both sanitary wastewater and storm drainage in the same pipe. Distinct from sanitary-only systems.")+li("Contributing Sewer","A sewer that flows into another larger sewer. A general description of a smaller sewer feeding the main line.")+li("Tributary Sewer","A smaller sewer that drains into a larger collector or trunk sewer. Does not specifically lead to a treatment plant.")+CL },
+  { q: "44. Where is a stormwater outfall typically found?", opts: ["Agricultural field", "Rivers", "Urban and suburban areas", "Detention pond"], ans: 1, info: "Correct Answer: Rivers", other_defs: HR+OL+li("Agricultural field","A recipient of agricultural runoff but not a stormwater outfall location. Stormwater systems discharge to natural water bodies.")+li("Urban and suburban areas","This is where stormwater runoff originates and where the drainage network is located - not where the outfall discharges.")+li("Detention pond","A basin that temporarily stores stormwater to reduce peak flow. Water from detention ponds eventually discharges to a river or stream.")+CL },
+  { q: "45. Which process is mostly associated with purification of water?", opts: ["Precipitation", "Condensation", "Transpiration", "Evaporation"], ans: 3, info: "Correct Answer: Evaporation", other_defs: HR+OL+li("Precipitation","Water falling from the atmosphere as rain, snow, or hail. Not a purification process - precipitation can carry pollutants.")+li("Condensation","The phase change from gas to liquid. While distillation uses evaporation followed by condensation, condensation alone is not the purification step.")+li("Transpiration","The process by which plants release water vapor through their leaves. Part of the water cycle but not a water purification process.")+CL },
+  { q: "46. Agency that set the criteria for the quality of drinking water from meteoric surface or underground sources.", opts: ["DENR", "National Standards for Drinking Water", "DOH", "NWRB"], ans: 1, info: "Correct Answer: National Standards for Drinking Water (NSDW)", other_defs: HR+OL+li("DENR","Sets environmental quality standards (effluent, ambient water quality) but does not set drinking water criteria.")+li("DOH","The Department of Health implements and enforces drinking water standards through the NSDW but is not the standards-setting body per se.")+li("NWRB","The National Water Resources Board regulates water rights and allocation. It does not set drinking water quality criteria.")+CL },
+  { q: "47. Water Code of the Philippines", opts: ["PD 1096", "PD 856", "PD 1185", "PD 1067"], ans: 3, info: "Correct Answer: PD 1067", other_defs: HR+OL+li("PD 1096","National Building Code of the Philippines. Governs the design, construction, and use of buildings.")+li("PD 856","Code on Sanitation of the Philippines. Covers environmental sanitation, food handling, and public health measures.")+li("PD 1185","Fire Code of the Philippines (Old). Superseded by RA 9514 (Fire Code of 2008).")+CL },
+  { q: "48. The distance between a water heater and the union on the water lines shall not be more than _____.", opts: ['6"', '12"', '18"', '24"'], ans: 1, info: 'Correct Answer: 12"', other_defs: HR+OL+li('6"',"Too short. While closer unions are acceptable, the NPCP specifies 12\" as the maximum allowable distance.")+li('18"',"Exceeds the maximum distance of 12\" specified in NPCP for unions on water heater connections.")+li('24"',"Too far. Longer distances make it difficult to disconnect the heater for maintenance, defeating the purpose of the union.")+CL },
+  { q: "49. It is used for measuring pore water pressures. It is also used to measure underground water pressure.", opts: ["Thermometer", "Manometer", "Barometer", "Piezometer"], ans: 3, info: "Correct Answer: Piezometer", other_defs: HR+OL+li("Thermometer","Measures temperature, not pressure. Not applicable to pore water or underground water pressure measurement.")+li("Manometer","Measures fluid pressure in pipes and tanks using a liquid-filled tube. Used for above-ground pressurized systems, not pore water pressure in soil.")+li("Barometer","Measures atmospheric (air) pressure. Not used for underground or pore water pressure measurements.")+CL },
+  { q: "50. This tank holds a salt solution that flushes the mineral tank, replacing calcium and magnesium ions with sodium.", opts: ["Wash water troughs", "Brine Tank", "Ion Exchanger", "Mineral Tank"], ans: 1, info: "Correct Answer: Brine Tank", other_defs: HR+OL+li("Wash water troughs","Troughs used in slow sand filter beds to distribute wash water during backwashing. Not part of a water softening system.")+li("Ion Exchanger","The resin vessel (mineral tank) where the actual ion exchange process occurs. The brine tank is separate and only stores the regeneration solution.")+li("Mineral Tank","The vessel containing the resin beads where softening occurs. The brine tank feeds the mineral tank during regeneration - they are two separate components.")+CL }
+];
+
+    let questionsList = [];
+    let currentQ = 0;
+    let userAnswers = [];
+    let isExamMode = false;
+    let timerInterval = null;
+    let timeLeft = 0;
+
+    const quizContainer = document.getElementById('quiz-container');
+    const appContainer = document.getElementById('app');
+
+    const startMenuHTML = `
+        <div id="start-menu" style="text-align:center;padding:20px 0;">
+            <h2 style="color:var(--primary);margin-bottom:10px;">Weekly Test 6</h2>
+            <p style="color:#7f8c8d;margin-bottom:30px;font-size:0.95rem;">Sanitation, Plumbing Design &amp; Installation (SPDI)</p>
+            <button class="nav-btn next" style="display:block;width:100%;margin-bottom:15px;background:var(--primary);" onclick="startQuiz(false)">Start Practice Mode</button>
+            <button class="nav-btn next" style="display:block;width:100%;margin-bottom:15px;background:#e67e22;" onclick="startQuiz(true)">Start Exam Mode (50 mins)</button>
+            <button id="resume-btn" class="nav-btn next" style="display:none;width:100%;margin-bottom:15px;background:#27ae60;" onclick="resumeQuiz()">Resume Saved Practice</button>
+        </div>
+    `;
+    quizContainer.style.display = 'none';
+    appContainer.insertAdjacentHTML('afterbegin', startMenuHTML);
+    const savedState = localStorage.getItem('weeklyTest6_state');
+    if (savedState) document.getElementById('resume-btn').style.display = 'block';
+
+    const header = document.querySelector('.header');
+    header.insertAdjacentHTML('afterend', '<div id="timer-display" style="display:none;text-align:center;font-size:1.5rem;font-weight:bold;color:#e74c3c;margin-bottom:15px;"></div>');
+
+    function startQuiz(examMode) {
+        document.getElementById('start-menu').style.display = 'none';
+        quizContainer.style.display = 'block';
+        isExamMode = examMode;
+        questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+        currentQ = 0;
+        userAnswers = new Array(questionsList.length).fill(null);
+        if (isExamMode) {
+            for (let i = questionsList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionsList[i], questionsList[j]] = [questionsList[j], questionsList[i]];
+            }
+            startTimer(50 * 60);
+        }
+        updateScore(); saveState(); loadQuestion();
+    }
+
+    function resumeQuiz() {
+        const state = JSON.parse(localStorage.getItem('weeklyTest6_state'));
+        if (state) {
+            document.getElementById('start-menu').style.display = 'none';
+            quizContainer.style.display = 'block';
+            questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+            currentQ = state.currentQ;
+            userAnswers = state.userAnswers;
+            isExamMode = false;
+            updateScore(); loadQuestion();
+        }
+    }
+
+    function startTimer(seconds) {
+        timeLeft = seconds;
+        document.getElementById('timer-display').style.display = 'block';
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            if (timeLeft <= 0) { clearInterval(timerInterval); showResults(true); }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        document.getElementById('timer-display').innerText = 'Time: ' + m.toString().padStart(2,'0') + ':' + s.toString().padStart(2,'0');
+    }
+
+    function saveState() {
+        if (isExamMode) return;
+        localStorage.setItem('weeklyTest6_state', JSON.stringify({ currentQ, userAnswers }));
+    }
+
+    function updateScore() {
+        let s = 0;
+        questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const scoreSpan = document.querySelector('.score');
+        if (isExamMode) scoreSpan.style.display = 'none';
+        else { scoreSpan.style.display = 'inline'; document.getElementById('score-val').innerText = s; }
+    }
+
+    function loadQuestion() {
+        const q = questionsList[currentQ];
+        document.getElementById('q-counter').innerText = 'Q: ' + (currentQ + 1) + ' / ' + questionsList.length;
+        let qText = q.q;
+        if (isExamMode) qText = qText.replace(/^\d+\.\s*/, '');
+        document.getElementById('question-text').innerHTML = qText;
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        let displayOpts = q.opts.map((text, index) => ({ text, index }));
+        if (isExamMode) {
+            if (!q.shuffledOrder) {
+                for (let i = displayOpts.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [displayOpts[i], displayOpts[j]] = [displayOpts[j], displayOpts[i]];
+                }
+                q.shuffledOrder = displayOpts.map(o => o.index);
+            } else {
+                displayOpts = q.shuffledOrder.map(idx => ({ text: q.opts[idx], index: idx }));
+            }
+        }
+        displayOpts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerHTML = String.fromCharCode(65 + i) + '. ' + opt.text;
+            btn.onclick = () => checkAnswer(opt.index, btn, displayOpts);
+            optsContainer.appendChild(btn);
+        });
+        document.getElementById('info-box').style.display = 'none';
+        document.getElementById('prev-btn').style.display = currentQ > 0 ? 'block' : 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        if (userAnswers[currentQ] !== null) {
+            const buttons = document.querySelectorAll('.btn');
+            const selectedIdx = userAnswers[currentQ];
+            displayOpts.forEach((opt, btnIdx) => {
+                const btn = buttons[btnIdx];
+                if (isExamMode) {
+                    if (opt.index === selectedIdx) { btn.style.border = '2px solid var(--primary)'; btn.style.background = '#eef7fd'; }
+                } else {
+                    btn.disabled = true;
+                    if (opt.index === selectedIdx) btn.classList.add(opt.index === q.ans ? 'correct' : 'wrong');
+                    if (opt.index === q.ans) btn.classList.add('correct');
+                }
+            });
+            if (!isExamMode) {
+                document.getElementById('info-box').innerHTML = '<strong>Review Note:</strong> ' + q.info + (q.other_defs || '');
+                document.getElementById('info-box').style.display = 'block';
+            }
+            showNextButton();
+        }
+    }
+
+    function checkAnswer(idx, btn, displayOpts) {
+        if (!isExamMode && userAnswers[currentQ] !== null) return;
+        userAnswers[currentQ] = idx;
+        updateScore(); saveState();
+        const buttons = document.querySelectorAll('.btn');
+        const q = questionsList[currentQ];
+        if (!isExamMode) {
+            buttons.forEach(b => b.disabled = true);
+            btn.classList.add(idx === q.ans ? 'correct' : 'wrong');
+            if (idx !== q.ans) {
+                displayOpts.forEach((opt, bi) => {
+                    if (opt.index === q.ans) buttons[bi].classList.add('correct');
+                });
+            }
+            document.getElementById('info-box').innerHTML = '<strong>Review Note:</strong> ' + q.info + (q.other_defs || '');
+            document.getElementById('info-box').style.display = 'block';
+        } else {
+            buttons.forEach(b => { b.style.border = '2px solid #e9ecef'; b.style.background = '#f8f9fa'; });
+            btn.style.border = '2px solid var(--primary)'; btn.style.background = '#eef7fd';
+        }
+        showNextButton();
+    }
+
+    function showNextButton() {
+        const btn = document.getElementById('next-btn');
+        btn.innerText = currentQ < questionsList.length - 1 ? 'Next' : 'Finish';
+        btn.style.display = 'block';
+    }
+
+    function prevQuestion() { if (currentQ > 0) { currentQ--; loadQuestion(); window.scrollTo(0, 0); } }
+    function nextQuestion() {
+        if (currentQ < questionsList.length - 1) { currentQ++; loadQuestion(); window.scrollTo(0, 0); }
+        else showResults();
+    }
+
+    function showResults(timesUp) {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('timer-display').style.display = 'none';
+        let s = 0;
+        questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const p = Math.round((s / questionsList.length) * 100);
+        let msg = p >= 80 ? 'Excellent work!' : (p >= 60 ? 'Good job! Keep it up.' : 'Keep studying! You got this.');
+        if (timesUp) msg = "Time's up! " + msg;
+        quizContainer.innerHTML = `
+            <div class="result-screen">
+                <h2 style="color:var(--primary);">Quiz Complete!</h2>
+                <p style="font-size:1.2rem;">You scored <strong>${s}</strong> out of <strong>${questionsList.length}</strong> (${p}%).</p>
+                <p>${msg}</p>
+                <button class="nav-btn next" style="display:block;width:100%;margin-top:15px;background:#f39c12;" onclick="showReview()">Review All Answers</button>
+                <button class="nav-btn next" style="display:block;width:100%;margin-top:15px;" onclick="location.reload()">Return to Main Menu</button>
+            </div>
+        `;
+    }
+
+    function showReview() {
+        let reviewHTML = '<div style="text-align:left;"><h2 style="color:var(--primary);text-align:center;">Exam Review</h2><p style="text-align:center;margin-bottom:20px;">Correct answers highlighted in green. Your incorrect choices shown in red.</p>';
+        questionsList.forEach((q, i) => {
+            const uAns = userAnswers[i];
+            const isCorrect = uAns === q.ans;
+            const unanswered = uAns === null || uAns === undefined;
+            const qStatus = isCorrect
+                ? '<span style="color:var(--correct);font-weight:bold;float:right;">Correct</span>'
+                : (unanswered ? '<span style="color:#f39c12;font-weight:bold;float:right;">Unanswered</span>'
+                              : '<span style="color:var(--wrong);font-weight:bold;float:right;">Incorrect</span>');
+            const borderColor = isCorrect ? 'var(--correct)' : (unanswered ? '#f39c12' : 'var(--wrong)');
+            const qTextClean = q.q.replace(/^\d+\.\s*/, '');
+            reviewHTML += '<div style="margin-bottom:30px;padding:20px;border:2px solid ' + borderColor + ';border-radius:12px;background:#fff;box-shadow:0 4px 6px rgba(0,0,0,0.05);">';
+            reviewHTML += '<div style="font-weight:600;font-size:1.1rem;margin-bottom:15px;color:var(--text);">' + qStatus + (i+1) + '. ' + qTextClean + '</div>';
+            reviewHTML += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:15px;">';
+            q.opts.forEach((opt, optIdx) => {
+                let style = 'padding:12px;border-radius:8px;border:1px solid #e9ecef;background:#f8f9fa;color:var(--text);';
+                let label = String.fromCharCode(65 + optIdx) + '. ' + opt;
+                if (optIdx === q.ans) {
+                    style = 'padding:12px;border-radius:8px;border:2px solid var(--correct);background:var(--correct-bg);color:#1e8449;font-weight:700;';
+                    label += ' (Correct Answer)';
+                } else if (optIdx === uAns && !isCorrect) {
+                    style = 'padding:12px;border-radius:8px;border:2px solid var(--wrong);background:var(--wrong-bg);color:#922b21;text-decoration:line-through;opacity:0.8;';
+                    label += ' (Your Choice)';
+                } else if (optIdx === uAns && isCorrect) {
+                    label += ' (Your Choice)';
+                }
+                reviewHTML += '<div style="' + style + '">' + label + '</div>';
+            });
+            reviewHTML += '</div>';
+            let infoContent = '';
+            if (q.info) infoContent += '<strong>Review Note:</strong> ' + q.info + '<br>';
+            if (q.other_defs) infoContent += q.other_defs;
+            if (infoContent) {
+                reviewHTML += '<div style="padding:15px;background:var(--info-bg);border-left:5px solid var(--info-border);border-radius:6px;font-size:0.95rem;line-height:1.5;">' + infoContent + '</div>';
+            }
+            reviewHTML += '</div>';
+        });
+        reviewHTML += '<button class="nav-btn next" style="display:block;width:100%;margin-top:25px;background:var(--primary);" onclick="location.reload()">Return to Main Menu</button></div>';
+        quizContainer.innerHTML = reviewHTML;
+        window.scrollTo(0, 0);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastery Test 7 - Relevant Codes</title>
+    <style>
+        :root {
+            --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; --primary: #3498db; --primary-hover: #2980b9;
+            --correct: #2ecc71; --correct-bg: #e8f8f5; --wrong: #e74c3c; --wrong-bg: #fdedec;
+            --info-border: #f39c12; --info-bg: #fef9e7; --secondary: #95a5a6; --secondary-hover: #7f8c8d;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
+        #app { background: var(--card-bg); width: 100%; max-width: 600px; padding: 25px 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); align-self: flex-start; margin-top: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1.1rem; padding-bottom: 15px; border-bottom: 2px solid #eee; margin-bottom: 25px; color: #7f8c8d; }
+        .score { color: var(--primary); }
+        .question { font-size: 1.25rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .btn { width: 100%; text-align: left; background: #f8f9fa; border: 2px solid #e9ecef; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 500; color: var(--text); cursor: pointer; transition: all 0.2s ease; outline: none; }
+        .btn:hover:not(:disabled) { background: #e2e6ea; border-color: #dae0e5; transform: translateY(-1px); }
+        .btn:disabled { cursor: default; opacity: 0.9; }
+        .btn.correct { background: var(--correct-bg); border-color: var(--correct); color: #1e8449; font-weight: 700; }
+        .btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: #922b21; text-decoration: line-through; opacity: 0.7; }
+        .info-box { margin-top: 25px; padding: 15px; background: var(--info-bg); border-left: 5px solid var(--info-border); border-radius: 6px; font-size: 0.95rem; line-height: 1.5; display: none; animation: fadeIn 0.4s ease; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 25px; }
+        .nav-btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.2s; display: none; }
+        .nav-btn.prev { background: var(--secondary); color: white; }
+        .nav-btn.next { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3); }
+        .home-btn { background: var(--secondary); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .result-screen { text-align: center; padding: 20px 0; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="quiz-container">
+        <div class="header">
+            <button class="home-btn" onclick="location.reload()">🏠 Home</button>
+            <span id="q-counter">Q: 1/60</span>
+            <span class="score">Score: <span id="score-val">0</span></span>
+        </div>
+        <div id="question-text" class="question"></div>
+        <div id="options-container" class="options"></div>
+        <div id="info-box" class="info-box"></div>
+        <div class="nav-buttons">
+            <button id="prev-btn" class="nav-btn prev" onclick="prevQuestion()">⬅ Prev</button>
+            <button id="next-btn" class="nav-btn next" onclick="nextQuestion()">Next ➔</button>
+        </div>
+    </div>
+</div>
+<script>
+    const allQuestions = [{"q": "1. Standard Specification for Gray Iron Castings for Valves, Flanges, and Pipe Fittings", "opts": ["ASTM A126", "ASTM A88", "ASTM A888", "ASTM B43"], "ans": 0, "info": "Correct Answer: ASTM A126", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM A88:</strong> Withdrawn standard for High-Test Gray-Iron Castings.</li><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings for Sanitary and Storm Drain, Waste, and Vent Piping Applications.</li><li><strong>ASTM B43:</strong> Standard Specification for Seamless Red Brass Pipe, Standard Sizes.</li></ul>"}, {"q": "2. Life Safety Code", "opts": ["NFPA 2", "NFPA 101", "NFPA 1", "NFPA 300"], "ans": 1, "info": "Correct Answer: NFPA 101", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 2:</strong> Hydrogen Technologies Code.</li><li><strong>NFPA 1:</strong> Fire Code.</li><li><strong>NFPA 300:</strong> Added as a distractor.</li></ul>"}, {"q": "3. Standard for Fire Safety and Emergency Symbols", "opts": ["NFPA 170", "NFPA 655", "NFPA 305", "NFPA 210"], "ans": 0, "info": "Correct Answer: NFPA 170", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 655:</strong> Standard for Prevention of Sulfur Fires and Explosions.</li><li><strong>NFPA 305:</strong> Added as a distractor.</li><li><strong>NFPA 210:</strong> Added as a distractor.</li></ul>"}, {"q": "4. Standard for Portable Fire Extinguishers", "opts": ["NFPA 24", "NFPA 13", "NFPA 10", "NFPA 25"], "ans": 2, "info": "Correct Answer: NFPA 10", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 24:</strong> Standard for the Installation of Private Fire Service Mains and their Appurtenances.</li><li><strong>NFPA 13:</strong> Standard for the Installation of Sprinkler Systems.</li><li><strong>NFPA 25:</strong> Standard for the Inspection, Testing, and Maintenance of Water-based Fire Protection Systems.</li></ul>"}, {"q": "5. Standard Method of Test for Temper of Strip and Sheet Metals for Electronic Devices (Spring-Back Method)", "opts": ["ASTM G677", "ASTM F155", "ASTM F1550", "ASTM A126"], "ans": 1, "info": "Correct Answer: ASTM F155", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM G677:</strong> Added as a distractor.</li><li><strong>ASTM F1550:</strong> Added as a distractor.</li><li><strong>ASTM A126:</strong> Standard Specification for Gray Iron Castings for Valves, Flanges, and Pipe Fittings.</li></ul>"}, {"q": "6. Fire Code of the Philippines of 2008", "opts": ["RA 9266", "RA 6541", "RA 9514", "PD 1185"], "ans": 2, "info": "Correct Answer: RA 9514", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 9266:</strong> The Architecture Act of 2004.</li><li><strong>RA 6541:</strong> National Building Code of the Philippines (Old).</li><li><strong>PD 1185:</strong> Fire Code of the Philippines (Old version, repealed by RA 9514). Note: The Revised IRR of RA 9514 was published in 2019.</li></ul>"}, {"q": "7. Accessibility Law", "opts": ["RA 544", "RA 6541", "BP 344", "PD 223"], "ans": 2, "info": "Correct Answer: BP 344", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 544:</strong> Civil Engineering Law.</li><li><strong>RA 6541:</strong> National Building Code of the Philippines (Old).</li><li><strong>PD 223:</strong> Creation of the Professional Regulation Commission. Note: BP 344's Revised IRR was implemented to enhance guidelines for persons with disabilities.</li></ul>"}, {"q": "8. Standard for the Installation of Stationary Pumps for Fire Protection", "opts": ["NFPA 22", "NFPA 205", "NFPA 245", "NFPA 20"], "ans": 3, "info": "Correct Answer: NFPA 20", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 22:</strong> Standard for Water Tanks for Private Fire Protection.</li><li><strong>NFPA 205:</strong> Added as a distractor.</li><li><strong>NFPA 245:</strong> Added as a distractor.</li></ul>"}, {"q": "9. Standard for the Installation of Sprinkler Systems", "opts": ["NFPA 24", "NFPA 14", "NFPA 10", "NFPA 13"], "ans": 3, "info": "Correct Answer: NFPA 13", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 24:</strong> Standard for the Installation of Private Fire Service Mains and their Appurtenances.</li><li><strong>NFPA 14:</strong> Standard for the Installation of Standpipe and Hose Systems.</li><li><strong>NFPA 10:</strong> Standard for Portable Fire Extinguishers.</li></ul>"}, {"q": "10. Philippine Environment Code", "opts": ["PD 1067", "RA 386", "PD 1152", "PD 296"], "ans": 2, "info": "Correct Answer: PD 1152", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 1067:</strong> Water Code of the Philippines.</li><li><strong>RA 386:</strong> Civil Code of the Philippines.</li><li><strong>PD 296:</strong> Directs all persons to renounce possession of encroached rivers and esteros.</li></ul>"}, {"q": "11. Health Care Facilities Code", "opts": ["NFPA 73", "NFPA 99", "NFPA 77", "NFPA 80"], "ans": 1, "info": "Correct Answer: NFPA 99", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 73:</strong> Electrical Inspection Code for Existing Dwellings.</li><li><strong>NFPA 77:</strong> Recommended Practice on Static Electricity.</li><li><strong>NFPA 80:</strong> Standard for Fire Doors and Other Opening Protectives.</li></ul>"}, {"q": "12. Standard Specification for Seamless and Welded Austenitic Stainless Steel Pipes", "opts": ["ASTM A888", "ASTM A312", "ASTM B135", "ASTM B88"], "ans": 1, "info": "Correct Answer: ASTM A312", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li><li><strong>ASTM B135:</strong> Standard Specification for Seamless Brass Tube.</li><li><strong>ASTM B88:</strong> Standard Specification for Seamless Copper Water Tube.</li></ul>"}, {"q": "13. Standard Specification for Hubless Cast Iron Soil Pipe and Fittings for Sanitary and Storm Drain, Waste, and Vent Piping Applications", "opts": ["ASTM A888", "ASTM D3350", "ASTM D1785", "ASTM A88"], "ans": 0, "info": "Correct Answer: ASTM A888", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM D3350:</strong> Standard Specification for Polyethylene Plastics Pipe and Fittings Materials.</li><li><strong>ASTM D1785:</strong> Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe Schedules 40, 80, and 120.</li><li><strong>ASTM A88:</strong> Withdrawn standard for High-Test Gray-Iron Castings.</li></ul>"}, {"q": "14. Standard Specification for Zinc (Hot-Dip Galvanized) Coatings on Iron and Steel Products", "opts": ["ASTM D335", "ASTM A323", "ASTM B43", "ASTM A123"], "ans": 3, "info": "Correct Answer: ASTM A123", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM D335:</strong> Standard Specification for Cotton Tapes Woven for Electrical Purposes.</li><li><strong>ASTM A323:</strong> Standard Specification for Ferroboron.</li><li><strong>ASTM B43:</strong> Standard Specification for Seamless Red Brass Pipe, Standard Sizes.</li></ul>"}, {"q": "15. Standard Specification for Carbon Steel, Alloy Steel, and Stainless Steel Nuts for Bolts for High Pressure or High Temperature Service, or Both", "opts": ["ASTM D1785", "ASTM A126", "ASTM A194", "ASTM D2846"], "ans": 2, "info": "Correct Answer: ASTM A194", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM D1785:</strong> Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe Schedules 40, 80, and 120.</li><li><strong>ASTM A126:</strong> Standard Specification for Gray Iron Castings for Valves, Flanges, and Pipe Fittings.</li><li><strong>ASTM D2846:</strong> Standard Specification for Chlorinated Poly(Vinyl Chloride) (CPVC) Plastic Hot- and Cold-Water Distribution Systems.</li></ul>"}, {"q": "16. Water Code of the Philippines", "opts": ["RA 1378", "PD 1067", "RA 1364", "RA 9275"], "ans": 1, "info": "Correct Answer: PD 1067", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 1378:</strong> Plumbing Law of the Philippines (Revised NPCP issued in 1999).</li><li><strong>RA 1364:</strong> Sanitary Engineering Law.</li><li><strong>RA 9275:</strong> Philippine Clean Water Act of 2004.</li></ul>"}, {"q": "17. Standard for the Inspection, Testing, and Maintenance of Water-based Fire Protection Systems", "opts": ["NFPA 13", "NFPA 72", "NFPA 25", "NFPA 34"], "ans": 2, "info": "Correct Answer: NFPA 25", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 13:</strong> Standard for the Installation of Sprinkler Systems.</li><li><strong>NFPA 72:</strong> National Fire Alarm and Signaling Code.</li><li><strong>NFPA 34:</strong> Standard for Dipping, Coating, and Printing Processes Using Flammable or Combustible Liquids.</li></ul>"}, {"q": "18. Sanitary Engineering Law", "opts": ["PD 1067", "PD 323", "RA 1378", "RA 1364"], "ans": 3, "info": "Correct Answer: RA 1364", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 1067:</strong> Water Code of the Philippines.</li><li><strong>PD 323:</strong> Amends PD 198 (Provincial Water Utilities Act) regarding water district formations.</li><li><strong>RA 1378:</strong> Plumbing Law of the Philippines.</li></ul>"}, {"q": "19. National Building Code of the Philippines (Old)", "opts": ["RA 545", "RA 6541", "PD 1185", "PD 1096"], "ans": 1, "info": "Correct Answer: RA 6541", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 545:</strong> An Act to Regulate the Practice of Architecture in the Philippines (Old).</li><li><strong>PD 1185:</strong> Fire Code of the Philippines (Old).</li><li><strong>PD 1096:</strong> National Building Code of the Philippines (Current active version).</li></ul>"}, {"q": "20. New Electrical Engineering Law", "opts": ["RA 7830", "RA 7920", "RA 7980", "RA 7270"], "ans": 1, "info": "Correct Answer: RA 7920", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 7830:</strong> Added as a distractor.</li><li><strong>RA 7980:</strong> Added as a distractor.</li><li><strong>RA 7270:</strong> Added as a distractor.</li></ul>"}, {"q": "21. Provincial Water Utilities Act of 1973", "opts": ["PD 198", "PD 1185", "PD 192", "RA 988"], "ans": 0, "info": "Correct Answer: PD 198", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 1185:</strong> Fire Code of the Philippines (Old).</li><li><strong>PD 192:</strong> Added as a distractor for PD 198.</li><li><strong>RA 988:</strong> Added as a distractor.</li></ul>"}, {"q": "22. Liquefied Petroleum Gas Code", "opts": ["NFPA 70", "NFPA 25", "NFPA 30", "NFPA 58"], "ans": 3, "info": "Correct Answer: NFPA 58", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 70:</strong> National Electrical Code.</li><li><strong>NFPA 25:</strong> Standard for the Inspection, Testing, and Maintenance of Water-based Fire Protection Systems.</li><li><strong>NFPA 30:</strong> Flammable and Combustible Liquids Code.</li></ul>"}, {"q": "23. Flammable and Combustible Liquids Code", "opts": ["NFPA 24", "NFPA 70", "NFPA 58", "NFPA 30"], "ans": 3, "info": "Correct Answer: NFPA 30", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 24:</strong> Standard for the Installation of Private Fire Service Mains.</li><li><strong>NFPA 70:</strong> National Electrical Code.</li><li><strong>NFPA 58:</strong> Liquefied Petroleum Gas Code.</li></ul>"}, {"q": "24. Plumbing Law", "opts": ["PD 856", "RA 1364", "RA 1378", "RA 544"], "ans": 2, "info": "Correct Answer: RA 1378", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 856:</strong> Code on Sanitation of the Philippines.</li><li><strong>RA 1364:</strong> Sanitary Engineering Law.</li><li><strong>RA 544:</strong> Civil Engineering Law.</li></ul>"}, {"q": "25. Standard for the Installation of Carbon Monoxide (CO) Detection and Warning Equipment", "opts": ["NFPA 93", "NFPA 360", "NFPA 720", "NFPA 420"], "ans": 2, "info": "Correct Answer: NFPA 720", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 93:</strong> Added as a distractor.</li><li><strong>NFPA 360:</strong> Added as a distractor.</li><li><strong>NFPA 420:</strong> Added as a distractor.</li></ul>"}, {"q": "26. Civil Code of the Philippines", "opts": ["RA 386", "PD 957", "BP 220", "PD 1152"], "ans": 0, "info": "Correct Answer: RA 386", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 957:</strong> Subdivision and Condominium Buyers' Protective Decree.</li><li><strong>BP 220:</strong> Economic and Socialized Housing Projects.</li><li><strong>PD 1152:</strong> Philippine Environment Code.</li></ul>"}, {"q": "27. Waterways Encroachment", "opts": ["PD 178", "PD 146", "PD 188", "PD 296"], "ans": 3, "info": "Correct Answer: PD 296", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 178:</strong> Added as a distractor.</li><li><strong>PD 146:</strong> Added as a distractor.</li><li><strong>PD 188:</strong> Added as a distractor.</li></ul>"}, {"q": "28. Standard Specification for PVC Sewer Pipe and Fittings", "opts": ["ASTM D2846", "ASTM D1785", "ASTM D2729", "ASTM A126"], "ans": 2, "info": "Correct Answer: ASTM D2729", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM D2846:</strong> Standard Specification for Chlorinated Poly(Vinyl Chloride) (CPVC) Plastic Hot- and Cold-Water Distribution Systems.</li><li><strong>ASTM D1785:</strong> Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe Schedules 40, 80, and 120.</li><li><strong>ASTM A126:</strong> Standard Specification for Gray Iron Castings for Valves, Flanges, and Pipe Fittings.</li></ul>"}, {"q": "29. Fire Code of the Philippines (Old)", "opts": ["RA 6541", "PD 1096", "PD 1185", "RA 9514"], "ans": 2, "info": "Correct Answer: PD 1185", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 6541:</strong> National Building Code of the Philippines (Old).</li><li><strong>PD 1096:</strong> National Building Code of the Philippines (Current active code).</li><li><strong>RA 9514:</strong> Fire Code of the Philippines of 2008 (Current active code, with 2019 Revised IRR).</li></ul>"}, {"q": "30. An Act to Regulate the Practice of Architecture in the Philippines (Old)", "opts": ["PD 323", "RA 545", "RA 544", "PD 223"], "ans": 1, "info": "Correct Answer: RA 545", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 323:</strong> Amends PD 198 (Provincial Water Utilities Act) regarding water district formations.</li><li><strong>RA 544:</strong> Civil Engineering Law.</li><li><strong>PD 223:</strong> Creation of the Professional Regulation Commission.</li></ul>"}, {"q": "31. Standard for the Installation of Air-Conditioning and Ventilating Systems", "opts": ["NFPA 80", "NFPA 90A", "NFPA 330", "NFPA 87"], "ans": 1, "info": "Correct Answer: NFPA 90A", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 80:</strong> Standard for Fire Doors and Other Opening Protectives.</li><li><strong>NFPA 330:</strong> Added as a distractor.</li><li><strong>NFPA 87:</strong> Standard for Fluid Heaters.</li></ul>"}, {"q": "32. Standard Specification for Seamless Brass Tube", "opts": ["ASTM A126", "ASTM D2846", "ASTM A888", "ASTM B135"], "ans": 3, "info": "Correct Answer: ASTM B135", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM A126:</strong> Standard Specification for Gray Iron Castings for Valves, Flanges, and Pipe Fittings.</li><li><strong>ASTM D2846:</strong> Standard Specification for CPVC Plastic Hot- and Cold-Water Distribution Systems.</li><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li></ul>"}, {"q": "33. Standard Specification for Chlorinated Poly(Vinyl Chloride) (CPVC) Plastic Hot- and Cold-Water Distribution Systems", "opts": ["ASTM F2389", "ASTM D1785", "ASTM A312", "ASTM D2846"], "ans": 3, "info": "Correct Answer: ASTM D2846", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM F2389:</strong> Standard Specification for Pressure-rated Polypropylene (PP) Piping Systems.</li><li><strong>ASTM D1785:</strong> Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe Schedules 40, 80, and 120.</li><li><strong>ASTM A312:</strong> Standard Specification for Seamless and Welded Austenitic Stainless Steel Pipes.</li></ul>"}, {"q": "34. Standard on Types of Building Construction", "opts": ["NFPA 120", "NFPA 220", "NFPA 101", "NFPA 253"], "ans": 1, "info": "Correct Answer: NFPA 220", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 120:</strong> Standard for Fire Prevention and Control in Coal Mines.</li><li><strong>NFPA 101:</strong> Life Safety Code.</li><li><strong>NFPA 253:</strong> Standard Method of Test for Critical Radiant Flux of Floor Covering Systems.</li></ul>"}, {"q": "35. Standard for the Fire Protection of Information Technology Equipment", "opts": ["NFPA 76", "NFPA 75", "NFPA 25", "NFPA 31"], "ans": 1, "info": "Correct Answer: NFPA 75", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 76:</strong> Standard for the Fire Protection of Telecommunications Facilities.</li><li><strong>NFPA 25:</strong> Standard for the Inspection, Testing, and Maintenance of Water-based Fire Protection Systems.</li><li><strong>NFPA 31:</strong> Standard for the Installation of Oil-Burning Equipment.</li></ul>"}, {"q": "36. Standard Specification for Chlorinated Poly(Vinyl Chloride) (CPVC) Plastic Pipe, Schedules 40 and 80", "opts": ["ASTM F441", "ASTM A126", "ASTM A123", "ASTM A888"], "ans": 0, "info": "Correct Answer: ASTM F441", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM A126:</strong> Standard Specification for Gray Iron Castings for Valves, Flanges, and Pipe Fittings.</li><li><strong>ASTM A123:</strong> Standard Specification for Zinc (Hot-Dip Galvanized) Coatings on Iron and Steel Products.</li><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li></ul>"}, {"q": "37. Standard Specification for Polyethylene Plastics Pipe and Fittings Materials", "opts": ["CSA B137.6", "ASTM D1785", "ASTM A888", "ASTM D3350"], "ans": 3, "info": "Correct Answer: ASTM D3350", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>CSA B137.6:</strong> CPVC Pipe, Tubing, and Fittings for Hot- and Cold-Water Distribution Systems.</li><li><strong>ASTM D1785:</strong> Standard Specification for PVC Plastic Pipe Schedules 40, 80, and 120.</li><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li></ul>"}, {"q": "38. Standard for Emergency and Standby Power Systems", "opts": ["NFPA 30", "NFPA 94", "NFPA 43", "NFPA 110"], "ans": 3, "info": "Correct Answer: NFPA 110", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 30:</strong> Flammable and Combustible Liquids Code.</li><li><strong>NFPA 94:</strong> Added as a distractor.</li><li><strong>NFPA 43:</strong> Added as a distractor.</li></ul>"}, {"q": "39. Philippine Clean Water Act of 2004", "opts": ["PD 856", "RA 9275", "PD 1152", "PD 1067"], "ans": 1, "info": "Correct Answer: RA 9275", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 856:</strong> Code on Sanitation of the Philippines.</li><li><strong>PD 1152:</strong> Philippine Environment Code.</li><li><strong>PD 1067:</strong> Water Code of the Philippines.</li></ul>"}, {"q": "40. Standard Specification for Seamless Copper Water Tube", "opts": ["ASTM F441", "ASTM D4976", "ASTM A888", "ASTM B88"], "ans": 3, "info": "Correct Answer: ASTM B88", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM F441:</strong> Standard Specification for CPVC Plastic Pipe, Schedules 40 and 80.</li><li><strong>ASTM D4976:</strong> Standard Specification for Polyethylene Plastics Molding and Extrusion Materials.</li><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li></ul>"}, {"q": "41. Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe Schedules 40, 80, and 120", "opts": ["ASTM A888", "ASTM D1785", "ASTM A126", "ASTM D2846"], "ans": 1, "info": "Correct Answer: ASTM D1785", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li><li><strong>ASTM A126:</strong> Standard Specification for Gray Iron Castings for Valves, Flanges, and Pipe Fittings.</li><li><strong>ASTM D2846:</strong> Standard Specification for CPVC Plastic Hot- and Cold-Water Distribution Systems.</li></ul>"}, {"q": "42. National Building Code of the Philippines (Current)", "opts": ["PD 1185", "PD 1096", "RA 9266", "RA 9514"], "ans": 1, "info": "Correct Answer: PD 1096", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 1185:</strong> Fire Code of the Philippines (Old).</li><li><strong>RA 9266:</strong> The Architecture Act of 2004.</li><li><strong>RA 9514:</strong> Fire Code of the Philippines of 2008.</li></ul>"}, {"q": "43. Fire Code", "opts": ["NFPA 1", "NFPA 101", "NFPA 13", "NFPA 3"], "ans": 0, "info": "Correct Answer: NFPA 1", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 101:</strong> Life Safety Code.</li><li><strong>NFPA 13:</strong> Standard for the Installation of Sprinkler Systems.</li><li><strong>NFPA 3:</strong> Standard for Commissioning of Fire Protection and Life Safety Systems.</li></ul>"}, {"q": "44. Philippine Clean Air Act of 1999", "opts": ["RA 855", "RA 193", "RA 8749", "RA 1344"], "ans": 2, "info": "Correct Answer: RA 8749", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 855:</strong> Added as a distractor.</li><li><strong>RA 193:</strong> Added as a distractor.</li><li><strong>RA 1344:</strong> Added as a distractor.</li></ul>"}, {"q": "45. Standard for the Installation of Private Fire Service Mains and their Appurtenances", "opts": ["NFPA 30", "NFPA 35", "NFPA 25", "NFPA 24"], "ans": 3, "info": "Correct Answer: NFPA 24", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 30:</strong> Flammable and Combustible Liquids Code.</li><li><strong>NFPA 35:</strong> Standard for the Manufacture of Organic Coatings.</li><li><strong>NFPA 25:</strong> Standard for the Inspection, Testing, and Maintenance of Water-based Fire Protection Systems.</li></ul>"}, {"q": "46. Standard Specification for Seamless Red Brass Pipe, Standard Sizes", "opts": ["ASTM A53", "ASTM A123", "ASTM B43", "ASTM B53"], "ans": 2, "info": "Correct Answer: ASTM B43", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM A53:</strong> Standard Specification for Pipe, Steel, Black and Hot-Dipped, Zinc-Coated, Welded and Seamless.</li><li><strong>ASTM A123:</strong> Standard Specification for Zinc (Hot-Dip Galvanized) Coatings on Iron and Steel Products.</li><li><strong>ASTM B53:</strong> Withdrawn standard specification; added as a distractor for ASTM B43.</li></ul>"}, {"q": "47. Standard Specification for Pipe, Steel, Black and Hot-Dipped, Zinc-Coated, Welded and Seamless", "opts": ["ASTM B43", "ASTM A888", "ASTM B135", "ASTM A53"], "ans": 3, "info": "Correct Answer: ASTM A53", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM B43:</strong> Standard Specification for Seamless Red Brass Pipe, Standard Sizes.</li><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li><li><strong>ASTM B135:</strong> Standard Specification for Seamless Brass Tube.</li></ul>"}, {"q": "48. Standard on Continuity, Emergency and Crisis Management", "opts": ["NFPA 130", "NFPA 1600", "NFPA 540", "NFPA 390"], "ans": 1, "info": "Correct Answer: NFPA 1600", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 130:</strong> Standard for Fixed Guideway Transit and Passenger Rail Systems.</li><li><strong>NFPA 540:</strong> Added as a distractor.</li><li><strong>NFPA 390:</strong> Added as a distractor.</li></ul>"}, {"q": "49. Standard for Chimneys, Fireplaces, Vents, and Solid Fuel-Burning Appliances", "opts": ["NFPA 440", "NFPA 340", "NFPA 112", "NFPA 211"], "ans": 3, "info": "Correct Answer: NFPA 211", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 440:</strong> Guide for Aircraft Rescue and Firefighting Operations.</li><li><strong>NFPA 340:</strong> Added as a distractor.</li><li><strong>NFPA 112:</strong> Standard for Pyrotechnic Special Effects.</li></ul>"}, {"q": "50. National Fire Alarm and Signaling Code", "opts": ["NFPA 70", "NFPA 24", "NFPA 72", "NFPA 13"], "ans": 2, "info": "Correct Answer: NFPA 72", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 70:</strong> National Electrical Code.</li><li><strong>NFPA 24:</strong> Standard for the Installation of Private Fire Service Mains and their Appurtenances.</li><li><strong>NFPA 13:</strong> Standard for the Installation of Sprinkler Systems.</li></ul>"}, {"q": "51. Creation of the Professional Regulation Commission", "opts": ["PD 223", "RA 9266", "PD 545", "PD 323"], "ans": 0, "info": "Correct Answer: PD 223", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 9266:</strong> The Architecture Act of 2004.</li><li><strong>PD 545:</strong> Added as a distractor.</li><li><strong>PD 323:</strong> Amends PD 198 regarding water district formations.</li></ul>"}, {"q": "52. Standard for the Installation of Standpipe and Hose Systems", "opts": ["NFPA 10", "NFPA 14", "NFPA 25", "NFPA 13"], "ans": 1, "info": "Correct Answer: NFPA 14", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 10:</strong> Standard for Portable Fire Extinguishers.</li><li><strong>NFPA 25:</strong> Standard for the Inspection, Testing, and Maintenance of Water-based Fire Protection Systems.</li><li><strong>NFPA 13:</strong> Standard for the Installation of Sprinkler Systems.</li></ul>"}, {"q": "53. Standard Specification for Pressure-rated Polypropylene (PP) Piping Systems", "opts": ["ASTM F2389", "CSA B137.6", "ASTM F155", "ASTM D1785"], "ans": 0, "info": "Correct Answer: ASTM F2389", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>CSA B137.6:</strong> CPVC Pipe, Tubing, and Fittings for Hot- and Cold-Water Distribution Systems.</li><li><strong>ASTM F155:</strong> Standard Method of Test for Temper of Strip and Sheet Metals.</li><li><strong>ASTM D1785:</strong> Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe Schedules 40, 80, and 120.</li></ul>"}, {"q": "54. Civil Engineering Law (Old)", "opts": ["PD 223", "RA 544", "PD 323", "RA 545"], "ans": 1, "info": "Correct Answer: RA 544", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 223:</strong> Creation of the Professional Regulation Commission.</li><li><strong>PD 323:</strong> Amends PD 198 regarding water district formations.</li><li><strong>RA 545:</strong> An Act to Regulate the Practice of Architecture in the Philippines (Old).</li></ul>"}, {"q": "55. National Fuel Gas Code", "opts": ["NFPA 58", "NFPA 211", "NFPA 54", "NFPA 76"], "ans": 2, "info": "Correct Answer: NFPA 54", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 58:</strong> Liquefied Petroleum Gas Code.</li><li><strong>NFPA 211:</strong> Standard for Chimneys, Fireplaces, Vents, and Solid Fuel-Burning Appliances.</li><li><strong>NFPA 76:</strong> Standard for the Fire Protection of Telecommunications Facilities.</li></ul>"}, {"q": "56. Standard for the Fire Protection of Telecommunications Facilities", "opts": ["NFPA 89", "NFPA 76", "NFPA 72", "NFPA 36"], "ans": 1, "info": "Correct Answer: NFPA 76", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 89:</strong> Standard for Heat Recovery Steam Generators. Note: Added as a distractor here.</li><li><strong>NFPA 72:</strong> National Fire Alarm and Signaling Code.</li><li><strong>NFPA 36:</strong> Standard for Solvent Extraction Plants.</li></ul>"}, {"q": "57. Electric Code", "opts": ["NFPA 62", "NFPA 70", "NFPA 105", "NFPA 72"], "ans": 1, "info": "Correct Answer: NFPA 70", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>NFPA 62:</strong> Standard for the Prevention of Fires and Dust Explosions in Agricultural and Food Processing Facilities. Note: Added as a distractor here.</li><li><strong>NFPA 105:</strong> Standard for Smoke Door Assemblies and Other Opening Protectives.</li><li><strong>NFPA 72:</strong> National Fire Alarm and Signaling Code.</li></ul>"}, {"q": "58. Standard Specification for Chlorinated Poly(Vinyl Chloride) (CPVC) Plastic Pipe (SDR-PR)", "opts": ["ASTM D1785", "ASTM A888", "ASTM D4976", "ASTM F442"], "ans": 3, "info": "Correct Answer: ASTM F442", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>ASTM D1785:</strong> Standard Specification for Poly(Vinyl Chloride) (PVC) Plastic Pipe Schedules 40, 80, and 120.</li><li><strong>ASTM A888:</strong> Standard Specification for Hubless Cast Iron Soil Pipe and Fittings.</li><li><strong>ASTM D4976:</strong> Standard Specification for Polyethylene Plastics Molding and Extrusion Materials.</li></ul>"}, {"q": "59. Philippine Mechanical Engineering Act of 1998", "opts": ["PD 1152", "RA 8749", "RA 9275", "RA 8495"], "ans": 3, "info": "Correct Answer: RA 8495", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>PD 1152:</strong> Philippine Environment Code.</li><li><strong>RA 8749:</strong> Philippine Clean Air Act of 1999.</li><li><strong>RA 9275:</strong> Philippine Clean Water Act of 2004.</li></ul>"}, {"q": "60. Code on Sanitation of the Philippines", "opts": ["PD 856", "RA 9275", "PD 1067", "PD 1152"], "ans": 0, "info": "Correct Answer: PD 856", "other_defs": "<hr style=\"border: 0; border-top: 1px solid #e1e8ed; margin: 15px 0;\"><strong>Other Options:</strong><ul style=\"margin-top: 5px; padding-left: 20px; font-size: 0.9rem;\"><li><strong>RA 9275:</strong> Philippine Clean Water Act of 2004.</li><li><strong>PD 1067:</strong> Water Code of the Philippines.</li><li><strong>PD 1152:</strong> Philippine Environment Code.</li></ul>"}];
+
+    let questionsList = [];
+    let currentQ = 0;
+    let userAnswers = [];
+    let isExamMode = false;
+    let timerInterval = null;
+    let timeLeft = 0;
+    let isReviewMode = false;
+
+    const quizContainer = document.getElementById('quiz-container');
+    const appContainer = document.getElementById('app');
+    
+    const startMenuHTML = `
+        <div id="start-menu" style="text-align: center; padding: 20px 0;">
+            <h2 style="color: var(--primary); margin-bottom: 30px;">Mastery Test 7 - Relevant Codes</h2>
+            <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: var(--primary);" onclick="startQuiz(false)">Start Practice Mode</button>
+            <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: #e67e22;" onclick="startQuiz(true)">Start Exam Mode (60 mins)</button>
+            <button id="resume-btn" class="nav-btn next" style="display:none; width:100%; margin-bottom:15px; background: #27ae60;" onclick="resumeQuiz()">Resume Saved Practice</button>
+        </div>
+    `;
+    quizContainer.style.display = 'none';
+    appContainer.insertAdjacentHTML('afterbegin', startMenuHTML);
+    const savedState = localStorage.getItem('masteryTest7_state');
+    if (savedState) document.getElementById('resume-btn').style.display = 'block';
+
+    const header = document.querySelector('.header');
+    header.insertAdjacentHTML('afterend', '<div id="timer-display" style="display:none; text-align:center; font-size:1.5rem; font-weight:bold; color:#e74c3c; margin-bottom:15px;"></div>');
+
+    function startQuiz(examMode) {
+        document.getElementById('start-menu').style.display = 'none';
+        quizContainer.style.display = 'block';
+        isExamMode = examMode; isReviewMode = false;
+        questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+        currentQ = 0; userAnswers = new Array(questionsList.length).fill(null);
+        if (isExamMode) {
+            for (let i = questionsList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionsList[i], questionsList[j]] = [questionsList[j], questionsList[i]];
+            }
+            startTimer(60 * 60); 
+        }
+        updateScore(); saveState(); loadQuestion();
+    }
+
+    function resumeQuiz() {
+        const state = JSON.parse(localStorage.getItem('masteryTest7_state'));
+        if (state) {
+            document.getElementById('start-menu').style.display = 'none';
+            quizContainer.style.display = 'block';
+            questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+            currentQ = state.currentQ; userAnswers = state.userAnswers;
+            isExamMode = false; isReviewMode = false;
+            updateScore(); loadQuestion();
+        }
+    }
+
+    function startReviewMode() {
+        const wrong = questionsList.filter((q, i) => userAnswers[i] !== q.ans);
+        if (wrong.length === 0) return;
+        isReviewMode = true; questionsList = wrong;
+        currentQ = 0; userAnswers = new Array(questionsList.length).fill(null);
+        loadQuestion();
+    }
+
+    function startTimer(seconds) {
+        timeLeft = seconds; document.getElementById('timer-display').style.display = 'block';
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            timeLeft--; updateTimerDisplay();
+            if (timeLeft <= 0) { clearInterval(timerInterval); showResults(true); }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        const m = Math.floor(timeLeft / 60); const s = timeLeft % 60;
+        document.getElementById('timer-display').innerText = `Time: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function saveState() {
+        if (isReviewMode || isExamMode) return;
+        localStorage.setItem('masteryTest7_state', JSON.stringify({ currentQ, userAnswers }));
+    }
+
+    function updateScore() {
+        let s = 0; questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const scoreSpan = document.querySelector('.score');
+        if (isExamMode && !isReviewMode) scoreSpan.style.display = 'none';
+        else { scoreSpan.style.display = 'inline'; document.getElementById('score-val').innerText = s; }
+    }
+
+    function loadQuestion() {
+        const q = questionsList[currentQ];
+        document.getElementById('q-counter').innerText = "Q: " + (currentQ + 1) + " / " + questionsList.length + (isReviewMode ? " (Review)" : "");
+        let qText = q.q;
+        if (isExamMode) qText = qText.replace(/^\d+\.\s*/, '');
+        document.getElementById('question-text').innerHTML = qText;
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        let displayOpts = q.opts.map((text, index) => ({ text, index }));
+        if (isExamMode && !isReviewMode) {
+            if (!q.shuffledOrder) {
+                for (let i = displayOpts.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [displayOpts[i], displayOpts[j]] = [displayOpts[j], displayOpts[i]];
+                }
+                q.shuffledOrder = displayOpts.map(o => o.index);
+            } else displayOpts = q.shuffledOrder.map(idx => ({ text: q.opts[idx], index: idx }));
+        }
+        displayOpts.forEach((opt, i) => {
+            const btn = document.createElement('button'); btn.className = 'btn';
+            btn.innerHTML = String.fromCharCode(65 + i) + ". " + opt.text;
+            btn.onclick = () => checkAnswer(opt.index, btn);
+            optsContainer.appendChild(btn);
+        });
+        document.getElementById('info-box').style.display = 'none';
+        document.getElementById('prev-btn').style.display = currentQ > 0 ? 'block' : 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        if (userAnswers[currentQ] !== null) {
+            const buttons = document.querySelectorAll('.btn');
+            const selectedIdx = userAnswers[currentQ];
+            displayOpts.forEach((opt, btnIdx) => {
+                const btn = buttons[btnIdx];
+                if (isExamMode && !isReviewMode) {
+                    if (opt.index === selectedIdx) { btn.style.border = "2px solid var(--primary)"; btn.style.background = "#eef7fd"; }
+                } else {
+                    btn.disabled = true;
+                    if (opt.index === selectedIdx) btn.classList.add(opt.index === q.ans ? 'correct' : 'wrong');
+                    if (opt.index === q.ans) btn.classList.add('correct');
+                }
+            });
+            if (!isExamMode || isReviewMode) {
+                document.getElementById('info-box').innerHTML = "<strong>Review Note:</strong> " + q.info + (q.other_defs || "");
+                document.getElementById('info-box').style.display = 'block';
+            }
+            showNextButton();
+        }
+    }
+
+    function checkAnswer(idx, btn) {
+        if (!isExamMode || isReviewMode) { if (userAnswers[currentQ] !== null) return; }
+        userAnswers[currentQ] = idx; updateScore(); saveState();
+        const buttons = document.querySelectorAll('.btn');
+        if (!isExamMode || isReviewMode) {
+            buttons.forEach(b => b.disabled = true);
+            const q = questionsList[currentQ];
+            btn.classList.add(idx === q.ans ? 'correct' : 'wrong');
+            if (idx !== q.ans) buttons[q.ans].classList.add('correct');
+            document.getElementById('info-box').innerHTML = "<strong>Review Note:</strong> " + q.info + (q.other_defs || "");
+            document.getElementById('info-box').style.display = 'block';
+        } else {
+            buttons.forEach(b => { b.style.border = "2px solid #e9ecef"; b.style.background = "#f8f9fa"; });
+            btn.style.border = "2px solid var(--primary)"; btn.style.background = "#eef7fd";
+        }
+        showNextButton();
+    }
+
+    function showNextButton() {
+        const btn = document.getElementById('next-btn');
+        btn.innerText = currentQ < questionsList.length - 1 ? 'Next ➔' : 'Finish 🏆';
+        btn.style.display = 'block';
+    }
+
+    function prevQuestion() { if (currentQ > 0) { currentQ--; loadQuestion(); window.scrollTo(0, 0); } }
+    function nextQuestion() { if (currentQ < questionsList.length - 1) { currentQ++; loadQuestion(); window.scrollTo(0, 0); } else showResults(); }
+
+    function showResults(timesUp) {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('timer-display').style.display = 'none';
+        let s = 0; questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const p = Math.round((s / questionsList.length) * 100);
+        let msg = p >= 80 ? "Excellent work!" : (p >= 60 ? "Good job!" : "Keep studying!");
+        if (timesUp) msg = "Time's up! " + msg;
+        let reviewBtn = (s < questionsList.length) ? `<button class="nav-btn next" style="display:block; width:100%; margin-top:15px; background: #f39c12;" onclick="startReviewMode()">Review Mistakes (${questionsList.length - s})</button>` : "";
+        quizContainer.innerHTML = `
+            <div class="result-screen">
+                <h2 style="color: var(--primary);">${isReviewMode ? "Review Complete!" : "Quiz Complete!"}</h2>
+                <p style="font-size: 1.2rem;">You scored <strong>${s}</strong> out of <strong>${questionsList.length}</strong> (${p}%).</p>
+                <p>${msg}</p>${reviewBtn}
+                <button class="nav-btn next" style="display:block; width:100%; margin-top:15px;" onclick="location.reload()">Return to Main Menu ↻</button>
+            </div>
+        `;
+    }
+    
+    function startReviewMode() {
+        isReviewMode = true;
+        let reviewHTML = '<div class="result-screen" style="text-align:left;"><h2 style="color: var(--primary); text-align:center;">Exam Review</h2><p style="text-align:center; margin-bottom:20px;">Review your answers below. Correct answers are highlighted in green, and your incorrect choices in red.</p>';
+        
+        questionsList.forEach((q, i) => {
+            let uAns = userAnswers[i];
+            let isCorrect = uAns === q.ans;
+            let qStatus = isCorrect ? '<span style="color:var(--correct); font-weight:bold; float:right;">Correct ✓</span>' : '<span style="color:var(--wrong); font-weight:bold; float:right;">Incorrect ✗</span>';
+            let unanswered = uAns === null || uAns === undefined;
+            if (unanswered) qStatus = '<span style="color:#f39c12; font-weight:bold; float:right;">Unanswered ⚠</span>';
+            
+            reviewHTML += `<div style="margin-bottom: 30px; padding: 20px; border: 2px solid ${isCorrect ? 'var(--correct)' : (unanswered ? '#f39c12' : 'var(--wrong)')}; border-radius: 12px; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">`;
+            
+            let qTextClean = q.q.replace(/^\d+\.\s*/, '');
+            reviewHTML += `<div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">${qStatus} ${i + 1}. ${qTextClean}</div>`;
+            
+            reviewHTML += `<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">`;
+            q.opts.forEach((opt, optIdx) => {
+                let btnStyle = "padding: 12px; border-radius: 8px; border: 1px solid #e9ecef; background: #f8f9fa; color: var(--text);";
+                let label = String.fromCharCode(65 + optIdx) + ". " + opt;
+                
+                if (optIdx === q.ans) {
+                    btnStyle = "padding: 12px; border-radius: 8px; border: 2px solid var(--correct); background: var(--correct-bg); color: #1e8449; font-weight: 700;";
+                    label += " (Correct Answer)";
+                } else if (optIdx === uAns && !isCorrect) {
+                    btnStyle = "padding: 12px; border-radius: 8px; border: 2px solid var(--wrong); background: var(--wrong-bg); color: #922b21; text-decoration: line-through; opacity: 0.8;";
+                    label += " (Your Choice)";
+                } else if (optIdx === uAns && isCorrect) {
+                     label += " (Your Choice)";
+                }
+                
+                reviewHTML += `<div style="${btnStyle}">${label}</div>`;
+            });
+            reviewHTML += `</div>`;
+            
+            let infoBoxContent = "";
+            if (q.info) infoBoxContent += `<strong>Review Note:</strong> ${q.info}<br>`;
+            if (q.other_defs) infoBoxContent += `${q.other_defs}`;
+            
+            if (infoBoxContent) {
+                reviewHTML += `<div style="padding: 15px; background: var(--info-bg); border-left: 5px solid var(--info-border); border-radius: 6px; font-size: 0.95rem; line-height: 1.5;">${infoBoxContent}</div>`;
+            }
+            
+            reviewHTML += `</div>`;
+        });
+
+        reviewHTML += `<button class="nav-btn next" style="display:block; width:100%; margin-top:25px; background: var(--primary);" onclick="location.reload()">Return to Main Menu ↻</button></div>`;
+        
+        quizContainer.innerHTML = reviewHTML;
+        window.scrollTo(0, 0);
+        
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+</script>
+</body>
+</html>

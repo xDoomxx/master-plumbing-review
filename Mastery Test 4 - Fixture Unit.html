@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mastery Test 4 - Fixture Unit</title>
+    <style>
+        :root {
+            --bg: #f4f7f6; --card-bg: #ffffff; --text: #2c3e50; --primary: #3498db; --primary-hover: #2980b9;
+            --correct: #2ecc71; --correct-bg: #e8f8f5; --wrong: #e74c3c; --wrong-bg: #fdedec;
+            --info-border: #f39c12; --info-bg: #fef9e7; --secondary: #95a5a6; --secondary-hover: #7f8c8d;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
+        #app { background: var(--card-bg); width: 100%; max-width: 600px; padding: 25px 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); align-self: flex-start; margin-top: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 1.1rem; padding-bottom: 15px; border-bottom: 2px solid #eee; margin-bottom: 25px; color: #7f8c8d; }
+        .score { color: var(--primary); }
+        .question { font-size: 1.25rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .btn { width: 100%; text-align: left; background: #f8f9fa; border: 2px solid #e9ecef; padding: 16px; border-radius: 12px; font-size: 1.05rem; font-weight: 500; color: var(--text); cursor: pointer; transition: all 0.2s ease; outline: none; }
+        .btn:hover:not(:disabled) { background: #e2e6ea; border-color: #dae0e5; transform: translateY(-1px); }
+        .btn:disabled { cursor: default; opacity: 0.9; }
+        .btn.correct { background: var(--correct-bg); border-color: var(--correct); color: #1e8449; font-weight: 700; }
+        .btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: #922b21; text-decoration: line-through; opacity: 0.7; }
+        .info-box { margin-top: 25px; padding: 15px; background: var(--info-bg); border-left: 5px solid var(--info-border); border-radius: 6px; font-size: 0.95rem; line-height: 1.5; display: none; animation: fadeIn 0.4s ease; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 25px; }
+        .nav-btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.2s; display: none; }
+        .nav-btn.prev { background: var(--secondary); color: white; }
+        .nav-btn.next { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3); }
+        .home-btn { background: var(--secondary); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .result-screen { text-align: center; padding: 20px 0; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="quiz-container">
+        <div class="header">
+            <button class="home-btn" onclick="location.reload()">🏠 Home</button>
+            <span id="q-counter">Q: 1/60</span>
+            <span class="score">Score: <span id="score-val">0</span></span>
+        </div>
+        <div id="question-text" class="question"></div>
+        <div id="options-container" class="options"></div>
+        <div id="info-box" class="info-box"></div>
+        <div class="nav-buttons">
+            <button id="prev-btn" class="nav-btn prev" onclick="prevQuestion()">⬅ Prev</button>
+            <button id="next-btn" class="nav-btn next" onclick="nextQuestion()">Next ➔</button>
+        </div>
+    </div>
+</div>
+<script>
+    const allQuestions = [{"q": "1. Receptors (floor sinks), indirect waste receptors for refrigerators, coffee urns, water station, etc. DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 0, "info": "Correct Answer: A. 1 DFU", "other_defs": ""}, {"q": "2. Kitchen Sink - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 3, "info": "Correct Answer: D. 4 WSFU", "other_defs": ""}, {"q": "3. Urinal pedestal, trap arm only DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 4, "info": "Correct Answer: E. 6 DFU", "other_defs": ""}, {"q": "4. Wash basin in sets DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "5. Dental Lavatory - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "6. Flush Tank - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 2, "info": "Correct Answer: C. 3 WSFU", "other_defs": ""}, {"q": "7. Urinal with Flush Tank - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 2, "info": "Correct Answer: C. 3 WSFU", "other_defs": ""}, {"q": "8. Interceptors for grease, oil, etc. DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 2, "info": "Correct Answer: C. 3 DFU", "other_defs": ""}, {"q": "9. Drinking Fountain - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "10. Water closet, private installation DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 3, "info": "Correct Answer: D. 4 DFU", "other_defs": ""}, {"q": "11. Water closet, public installation DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 4, "info": "Correct Answer: E. 6 DFU", "other_defs": ""}, {"q": "12. Urinal stall separate trap DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "13. Urinal (wall lip) - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 4, "info": "Correct Answer: E. 5 WSFU", "other_defs": ""}, {"q": "14. Flushometer tank - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 2, "info": "Correct Answer: C. 3 WSFU", "other_defs": ""}, {"q": "15. Sink service DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 2, "info": "Correct Answer: C. 3 DFU", "other_defs": ""}, {"q": "16. Laundry Tray (1 or 2 compartments) - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 3, "info": "Correct Answer: D. 4 WSFU", "other_defs": ""}, {"q": "17. Urinal wall-mounted integral trap, trap arm only DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 2, "info": "Correct Answer: C. 3 DFU", "other_defs": ""}, {"q": "18. Drinking Fountain - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 0, "info": "Correct Answer: A. 1 WSFU", "other_defs": ""}, {"q": "19. Wash Sink, circular or multiple (each set of faucets) - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "20. Shower, each head - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 3, "info": "Correct Answer: D. 4 WSFU", "other_defs": ""}, {"q": "21. Flushometer Valve- Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 6, "info": "Correct Answer: G. 10 WSFU", "other_defs": ""}, {"q": "22. Bedpan Washer - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 6, "info": "Correct Answer: G. 10 WSFU", "other_defs": ""}, {"q": "23. Urinal, pedestal - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 6, "info": "Correct Answer: G. 10 WSFU", "other_defs": ""}, {"q": "24. Sink bar private DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 0, "info": "Correct Answer: A. 1 DFU", "other_defs": ""}, {"q": "25. Laundry Tray (1 or 2 compartments) - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "26. Sink, service - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "27. Urinal wall-mounted blowout, integral trap DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 4, "info": "Correct Answer: E. 6 DFU", "other_defs": ""}, {"q": "28. Shower, each head - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "29. Interceptors for sand, autowash, etc. DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 4, "info": "Correct Answer: E. 6 DFU", "other_defs": ""}, {"q": "30. Receptors, indirect waste receptors for commercial sinks, dishwashers, air washers, etc. DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 2, "info": "Correct Answer: C. 3 DFU", "other_defs": ""}, {"q": "31. Floor Drains DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "32. Wash basin (lavatory) single DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 0, "info": "Correct Answer: A. 1 DFU", "other_defs": ""}, {"q": "33. Lavatory - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "34. Urinal wall-mounted washout DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "35. Clotheswashers DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "36. Bidet - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 3, "info": "Correct Answer: D. 4 WSFU", "other_defs": ""}, {"q": "37. Sink bar commercial DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "38. Dental Lavatory - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 0, "info": "Correct Answer: A. 1 WSFU", "other_defs": ""}, {"q": "39. Urinal wall-mounted washdown or siphon jet DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "40. Kitchen Sink - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "41. Bidet - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "42. Bidets DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "43. Bathtub - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 1, "info": "Correct Answer: B. 2 WSFU", "other_defs": ""}, {"q": "44. Combination Sink and Tray - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 2, "info": "Correct Answer: C. 3 WSFU", "other_defs": ""}, {"q": "45. Drinking Fountains DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 0, "info": "Correct Answer: A. 1 DFU", "other_defs": ""}, {"q": "46. Flush Tank - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 4, "info": "Correct Answer: E. 5 WSFU", "other_defs": ""}, {"q": "47. Sink, commercial or industrial schools DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 2, "info": "Correct Answer: C. 3 DFU", "other_defs": ""}, {"q": "48. Sink flushing rim, clinic DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 4, "info": "Correct Answer: E. 6 DFU", "other_defs": ""}, {"q": "49. Sink, service - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 3, "info": "Correct Answer: D. 4 WSFU", "other_defs": ""}, {"q": "50. Dental Unit or Cuspidor - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 0, "info": "Correct Answer: A. 1 WSFU", "other_defs": ""}, {"q": "51. Dental Units or Cuspidors DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 0, "info": "Correct Answer: A. 1 DFU", "other_defs": ""}, {"q": "52. Mobile home park traps DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 4, "info": "Correct Answer: E. 6 DFU", "other_defs": ""}, {"q": "53. Flushometer tank - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 4, "info": "Correct Answer: E. 5 WSFU", "other_defs": ""}, {"q": "54. Urinal stall - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 4, "info": "Correct Answer: E. 5 WSFU", "other_defs": ""}, {"q": "55. Lavatory - Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 0, "info": "Correct Answer: A. 1 WSFU", "other_defs": ""}, {"q": "56. Bathtub DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "57. Shower single stall DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "58. Bathtub - Public (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 3, "info": "Correct Answer: D. 4 WSFU", "other_defs": ""}, {"q": "59. Sinks, and/or dishwashers (residential) 51 mm min. waste DFU", "opts": ["1 DFU", "2 DFU", "3 DFU", "4 DFU", "6 DFU"], "ans": 1, "info": "Correct Answer: B. 2 DFU", "other_defs": ""}, {"q": "60. Flushometer Valve- Private (WSFU)", "opts": ["1 WSFU", "2 WSFU", "3 WSFU", "4 WSFU", "5 WSFU", "6 WSFU", "10 WSFU"], "ans": 5, "info": "Correct Answer: F. 6 WSFU", "other_defs": ""}];
+    let questionsList = [];
+    let currentQ = 0;
+    let userAnswers = [];
+    let isExamMode = false;
+    let timerInterval = null;
+    let timeLeft = 0;
+    let isReviewMode = false;
+
+    const quizContainer = document.getElementById('quiz-container');
+    const appContainer = document.getElementById('app');
+    
+    const startMenuHTML = `
+        <div id="start-menu" style="text-align: center; padding: 20px 0;">
+            <h2 style="color: var(--primary); margin-bottom: 30px;">Mastery Test 4 - Fixture Unit</h2>
+            <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: var(--primary);" onclick="startQuiz(false)">Start Practice Mode</button>
+            <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: #e67e22;" onclick="startQuiz(true)">Start Exam Mode (60 mins)</button>
+            <button id="resume-btn" class="nav-btn next" style="display:none; width:100%; margin-bottom:15px; background: #27ae60;" onclick="resumeQuiz()">Resume Saved Practice</button>
+        </div>
+    `;
+    quizContainer.style.display = 'none';
+    appContainer.insertAdjacentHTML('afterbegin', startMenuHTML);
+    const savedState = localStorage.getItem('masteryTest4_state');
+    if (savedState) document.getElementById('resume-btn').style.display = 'block';
+
+    const header = document.querySelector('.header');
+    header.insertAdjacentHTML('afterend', '<div id="timer-display" style="display:none; text-align:center; font-size:1.5rem; font-weight:bold; color:#e74c3c; margin-bottom:15px;"></div>');
+
+    function startQuiz(examMode) {
+        document.getElementById('start-menu').style.display = 'none';
+        quizContainer.style.display = 'block';
+        isExamMode = examMode; isReviewMode = false;
+        questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+        currentQ = 0; userAnswers = new Array(questionsList.length).fill(null);
+        if (isExamMode) {
+            for (let i = questionsList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questionsList[i], questionsList[j]] = [questionsList[j], questionsList[i]];
+            }
+            startTimer(60 * 60); 
+        }
+        updateScore(); saveState(); loadQuestion();
+    }
+
+    function resumeQuiz() {
+        const state = JSON.parse(localStorage.getItem('masteryTest4_state'));
+        if (state) {
+            document.getElementById('start-menu').style.display = 'none';
+            quizContainer.style.display = 'block';
+            questionsList = allQuestions.map(q => ({...q, shuffledOrder: null}));
+            currentQ = state.currentQ; userAnswers = state.userAnswers;
+            isExamMode = false; isReviewMode = false;
+            updateScore(); loadQuestion();
+        }
+    }
+
+    function startReviewMode() {
+        isReviewMode = true;
+        let reviewHTML = '<div class="result-screen" style="text-align:left;"><h2 style="color: var(--primary); text-align:center;">Exam Review</h2><p style="text-align:center; margin-bottom:20px;">Review your answers below. Correct answers are highlighted in green, and your incorrect choices in red.</p>';
+        
+        questionsList.forEach((q, i) => {
+            let uAns = userAnswers[i];
+            let isCorrect = uAns === q.ans;
+            let qStatus = isCorrect ? '<span style="color:var(--correct); font-weight:bold; float:right;">Correct ✓</span>' : '<span style="color:var(--wrong); font-weight:bold; float:right;">Incorrect ✗</span>';
+            let unanswered = uAns === null || uAns === undefined;
+            if (unanswered) qStatus = '<span style="color:#f39c12; font-weight:bold; float:right;">Unanswered ⚠</span>';
+            
+            reviewHTML += `<div style="margin-bottom: 30px; padding: 20px; border: 2px solid ${isCorrect ? 'var(--correct)' : (unanswered ? '#f39c12' : 'var(--wrong)')}; border-radius: 12px; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">`;
+            
+            let qTextClean = q.q.replace(/^\d+\.\s*/, '');
+            reviewHTML += `<div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; color: var(--text);">${qStatus} ${i + 1}. ${qTextClean}</div>`;
+            
+            reviewHTML += `<div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">`;
+            q.opts.forEach((opt, optIdx) => {
+                let btnStyle = "padding: 12px; border-radius: 8px; border: 1px solid #e9ecef; background: #f8f9fa; color: var(--text);";
+                let label = String.fromCharCode(65 + optIdx) + ". " + opt;
+                
+                if (optIdx === q.ans) {
+                    btnStyle = "padding: 12px; border-radius: 8px; border: 2px solid var(--correct); background: var(--correct-bg); color: #1e8449; font-weight: 700;";
+                    label += " (Correct Answer)";
+                } else if (optIdx === uAns && !isCorrect) {
+                    btnStyle = "padding: 12px; border-radius: 8px; border: 2px solid var(--wrong); background: var(--wrong-bg); color: #922b21; text-decoration: line-through; opacity: 0.8;";
+                    label += " (Your Choice)";
+                } else if (optIdx === uAns && isCorrect) {
+                     label += " (Your Choice)";
+                }
+                
+                reviewHTML += `<div style="${btnStyle}">${label}</div>`;
+            });
+            reviewHTML += `</div>`;
+            
+            let info = q.info || "";
+            let other = q.other_defs || "";
+            let infoBoxContent = "";
+            if (info) infoBoxContent += `<strong>Review Note:</strong> ${info}<br>`;
+            if (other) infoBoxContent += `${other}`;
+            
+            if (infoBoxContent) {
+                reviewHTML += `<div style="padding: 15px; background: var(--info-bg); border-left: 5px solid var(--info-border); border-radius: 6px; font-size: 0.95rem; line-height: 1.5;">${infoBoxContent}</div>`;
+            }
+            
+            reviewHTML += `</div>`;
+        });
+
+        reviewHTML += `<button class="nav-btn next" style="display:block; width:100%; margin-top:25px; background: var(--primary);" onclick="location.reload()">Return to Main Menu ↻</button></div>`;
+        
+        quizContainer.innerHTML = reviewHTML;
+        window.scrollTo(0, 0);
+        
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function startTimer(seconds) {
+        timeLeft = seconds; document.getElementById('timer-display').style.display = 'block';
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            timeLeft--; updateTimerDisplay();
+            if (timeLeft <= 0) { clearInterval(timerInterval); showResults(true); }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        const m = Math.floor(timeLeft / 60); const s = timeLeft % 60;
+        document.getElementById('timer-display').innerText = `Time: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function saveState() {
+        if (isReviewMode || isExamMode) return;
+        localStorage.setItem('masteryTest4_state', JSON.stringify({ currentQ, userAnswers }));
+    }
+
+    function updateScore() {
+        let s = 0; questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const scoreSpan = document.querySelector('.score');
+        if (isExamMode && !isReviewMode) scoreSpan.style.display = 'none';
+        else { scoreSpan.style.display = 'inline'; document.getElementById('score-val').innerText = s; }
+    }
+
+    function loadQuestion() {
+        const q = questionsList[currentQ];
+        document.getElementById('q-counter').innerText = "Q: " + (currentQ + 1) + " / " + questionsList.length + (isReviewMode ? " (Review)" : "");
+        let qText = q.q;
+        if (isExamMode) qText = qText.replace(/^\d+\.\s*/, '');
+        document.getElementById('question-text').innerHTML = qText;
+        const optsContainer = document.getElementById('options-container');
+        optsContainer.innerHTML = '';
+        let displayOpts = q.opts.map((text, index) => ({ text, index }));
+        if (isExamMode && !isReviewMode) {
+            if (!q.shuffledOrder) {
+                for (let i = displayOpts.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [displayOpts[i], displayOpts[j]] = [displayOpts[j], displayOpts[i]];
+                }
+                q.shuffledOrder = displayOpts.map(o => o.index);
+            } else displayOpts = q.shuffledOrder.map(idx => ({ text: q.opts[idx], index: idx }));
+        }
+        displayOpts.forEach((opt, i) => {
+            const btn = document.createElement('button'); btn.className = 'btn';
+            btn.innerHTML = String.fromCharCode(65 + i) + ". " + opt.text.replace(/^[A-G]\.\s*/, '');
+            btn.onclick = () => checkAnswer(opt.index, btn);
+            optsContainer.appendChild(btn);
+        });
+        document.getElementById('info-box').style.display = 'none';
+        document.getElementById('prev-btn').style.display = currentQ > 0 ? 'block' : 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        if (userAnswers[currentQ] !== null) {
+            const buttons = document.querySelectorAll('.btn');
+            const selectedIdx = userAnswers[currentQ];
+            displayOpts.forEach((opt, btnIdx) => {
+                const btn = buttons[btnIdx];
+                if (isExamMode && !isReviewMode) {
+                    if (opt.index === selectedIdx) { btn.style.border = "2px solid var(--primary)"; btn.style.background = "#eef7fd"; }
+                } else {
+                    btn.disabled = true;
+                    if (opt.index === selectedIdx) btn.classList.add(opt.index === q.ans ? 'correct' : 'wrong');
+                    if (opt.index === q.ans) btn.classList.add('correct');
+                }
+            });
+            if (!isExamMode || isReviewMode) {
+                document.getElementById('info-box').innerHTML = "<strong>Review Note:</strong> " + q.info;
+                document.getElementById('info-box').style.display = 'block';
+            }
+            showNextButton();
+        }
+    }
+
+    function checkAnswer(idx, btn) {
+        if (!isExamMode || isReviewMode) { if (userAnswers[currentQ] !== null) return; }
+        userAnswers[currentQ] = idx; updateScore(); saveState();
+        const buttons = document.querySelectorAll('.btn');
+        if (!isExamMode || isReviewMode) {
+            buttons.forEach(b => b.disabled = true);
+            const q = questionsList[currentQ];
+            btn.classList.add(idx === q.ans ? 'correct' : 'wrong');
+            if (idx !== q.ans) buttons[q.ans].classList.add('correct');
+            document.getElementById('info-box').innerHTML = "<strong>Review Note:</strong> " + q.info;
+            document.getElementById('info-box').style.display = 'block';
+        } else {
+            buttons.forEach(b => { b.style.border = "2px solid #e9ecef"; b.style.background = "#f8f9fa"; });
+            btn.style.border = "2px solid var(--primary)"; btn.style.background = "#eef7fd";
+        }
+        showNextButton();
+    }
+
+    function showNextButton() {
+        const btn = document.getElementById('next-btn');
+        btn.innerText = currentQ < questionsList.length - 1 ? 'Next ➔' : 'Finish 🏆';
+        btn.style.display = 'block';
+    }
+
+    function prevQuestion() { if (currentQ > 0) { currentQ--; loadQuestion(); window.scrollTo(0, 0); } }
+    function nextQuestion() { if (currentQ < questionsList.length - 1) { currentQ++; loadQuestion(); window.scrollTo(0, 0); } else showResults(); }
+
+    function showResults(timesUp) {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('timer-display').style.display = 'none';
+        let s = 0; questionsList.forEach((q, i) => { if (userAnswers[i] === q.ans) s++; });
+        const p = Math.round((s / questionsList.length) * 100);
+        let msg = p >= 80 ? "Excellent work!" : (p >= 60 ? "Good job!" : "Keep studying!");
+        if (timesUp) msg = "Time's up! " + msg;
+        let reviewBtn = (s < questionsList.length) ? `<button class="nav-btn next" style="display:block; width:100%; margin-top:15px; background: #f39c12;" onclick="startReviewMode()">Review Mistakes (${questionsList.length - s})</button>` : "";
+        quizContainer.innerHTML = `
+            <div class="result-screen">
+                <h2 style="color: var(--primary);">${isReviewMode ? "Review Complete!" : "Quiz Complete!"}</h2>
+                <p style="font-size: 1.2rem;">You scored <strong>${s}</strong> out of <strong>${questionsList.length}</strong> (${p}%).</p>
+                <p>${msg}</p>${reviewBtn}
+                <button class="nav-btn next" style="display:block; width:100%; margin-top:15px;" onclick="location.reload()">Return to Main Menu ↻</button>
+            </div>
+        `;
+    }
+</script>
+</body>
+</html>
