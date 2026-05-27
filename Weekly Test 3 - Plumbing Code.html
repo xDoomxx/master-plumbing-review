@@ -30,13 +30,25 @@
         .home-btn { background: var(--secondary); color: white; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .result-screen { text-align: center; padding: 20px 0; }
+        [data-theme="dark"] {
+            --bg: #0d1117; --card-bg: #161b22; --text: #e6edf3;
+            --primary: #58a6ff; --primary-hover: #79b8ff;
+            --correct: #3fb950; --correct-bg: rgba(63,185,80,0.15);
+            --wrong: #f85149; --wrong-bg: rgba(248,81,73,0.15);
+            --info-border: #d29922; --info-bg: rgba(210,153,34,0.1);
+            --secondary: #30363d; --secondary-hover: #3c444d;
+        }
+        [data-theme="dark"] .header { border-bottom-color: #30363d; color: #8b949e; }
+        [data-theme="dark"] .btn { background: #1c2128; border-color: #30363d; }
+        [data-theme="dark"] .btn:hover:not(:disabled) { background: #262c36; border-color: #484f58; }
+        [data-theme="dark"] #app { box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     </style>
 </head>
-<body>
+<body data-theme="light">
 <div id="app">
     <div id="quiz-container">
         <div class="header">
-            <button class="home-btn" onclick="location.reload()">&#127968; Home</button>
+            <div style="display:flex;align-items:center;gap:6px;"><button class="home-btn" onclick="goBackToPortal()">&#8592; Back</button><button class="home-btn" id="themeBtn" onclick="toggleTheme()">&#127769;</button></div>
             <span id="q-counter">Q: 1/50</span>
             <span class="score">Score: <span id="score-val">0</span></span>
         </div>
@@ -65,6 +77,7 @@
     const startMenuHTML = `
         <div id="start-menu" style="text-align: center; padding: 20px 0;">
             <h2 style="color: var(--primary); margin-bottom: 30px;">Weekly Test 3 - Plumbing Code</h2>
+            <button class="nav-btn" style="display:block; width:100%; margin-bottom:15px; background: var(--secondary); color:white; border-radius:12px; font-size:1.1rem; font-weight:700; cursor:pointer;" onclick="goBackToPortal()">&#8592; Back to Portal</button>
             <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: var(--primary);" onclick="startQuiz(false)">Start Practice Mode</button>
             <button class="nav-btn next" style="display:block; width:100%; margin-bottom:15px; background: #e67e22;" onclick="startQuiz(true)">Start Exam Mode (60 mins)</button>
             <button id="resume-btn" class="nav-btn next" style="display:none; width:100%; margin-bottom:15px; background: #27ae60;" onclick="resumeQuiz()">Resume Saved Practice</button>
@@ -286,6 +299,22 @@
         window.scrollTo(0, 0);
     }
 
+
+    /* ── Dark mode & portal navigation ── */
+    (function() {
+        var THEME_KEY = 'mp_portal_theme';
+        function applyTheme(isDark) {
+            document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            var btn = document.getElementById('themeBtn');
+            if (btn) btn.innerHTML = isDark ? '&#9728;&#65039;' : '&#127769;';
+            localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+        }
+        window.toggleTheme = function() { applyTheme(document.body.getAttribute('data-theme') !== 'dark'); };
+        window.goBackToPortal = function() { window.location.href = 'Review Portal.html'; };
+        var saved = localStorage.getItem(THEME_KEY);
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(saved ? saved === 'dark' : prefersDark);
+    })();
 </script>
 </body>
 </html>
